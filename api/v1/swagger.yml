@@ -1,0 +1,242 @@
+openapi: "3.0.0"
+info:
+  title: "AutoBk GUI API"
+  version: "1.0.0"
+  description: "API for AutoBk GUI"
+
+paths:
+  /devices:
+    get:
+      tags:
+        - "devices"
+      summary: "Retrieve a list of all devices"
+      description: "Fetches a list of all devices with their details including latest backup and next scheduled backup."
+      responses:
+        200:
+          description: "A list of devices"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    deviceId:
+                      type: integer
+                      description: "The unique identifier of the device."
+                    name:
+                      type: string
+                      description: "The name of the device."
+                    type:
+                      type: string
+                      description: "The type of the device."
+                    ip:
+                      type: string
+                      description: "The IP address of the device."
+                    latestBackup:
+                      type: object
+                      description: "Details of the latest backup for the device."
+                      properties:
+                        fileId:
+                          type: integer
+                          description: "The identifier for the latest backup file."
+                          # ... other properties for latestBackup ...
+                    nextSchedule:
+                      type: object
+                      description: "Details of the next scheduled backup for the device."
+                      properties:
+                        scheduleId:
+                          type: integer
+                          description: "The identifier for the next scheduled backup."
+                          # ... other properties for nextSchedule ...
+        500:
+          description: "Error message in case of server error."
+    post:
+      tags:
+        - "devices"
+      summary: "Add a new device"
+      description: "Creates a new device with the given details."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: "Name of the new device."
+                type:
+                  type: string
+                  enum: [ APEX, DCM, CAP, Inca1, Vista, OneNet, OneNetLog, TC600E, CXCHP, PSSend, Quartet ]
+                  description: "Type of the new device."
+                ip:
+                  type: string
+                  description: "IPv4 address of the new device."
+                autoDay:
+                  type: integer
+                  description: "Auto backup day for the new device."
+                autoHour:
+                  type: integer
+                  description: "Auto backup hour for the new device."
+                autoWeeks:
+                  type: integer
+                  description: "Auto backup frequency in weeks for the new device."
+                # ... other fields for the new device ...
+      responses:
+        201:
+          description: "The newly created device information"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: integer
+                    description: "The unique identifier of the newly added device."
+                  name:
+                    type: string
+                    description: "The name of the newly added device."
+                  type:
+                    type: string
+                    description: "The type of the newly added device."
+                  ip:
+                    type: string
+                    description: "The IP address of the newly added device."
+                  autoDay:
+                    type: integer
+                    description: "Auto backup day of the newly added device."
+                  autoHour:
+                    type: integer
+                    description: "Auto backup hour of the newly added device."
+                  autoWeeks:
+                    type: integer
+                    description: "Auto backup frequency in weeks of the newly added device."
+        500:
+          description: "Error message in case of server error."
+
+  /devices/{id}:
+    get:
+      tags:
+        - "devices"
+      summary: "Retrieve information about a specific device"
+      description: "Fetches detailed information about a device including its backups and scheduled backups based on its unique identifier."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "Unique identifier of the device"
+      responses:
+        200:
+          description: "Detailed information of the specified device"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceInfo:
+                    type: object
+                    properties:
+                      deviceId:
+                        type: integer
+                        description: "The unique identifier of the device."
+                      name:
+                        type: string
+                        description: "The name of the device."
+                      type:
+                        type: string
+                        description: "The type of the device."
+                      ip:
+                        type: string
+                        description: "The IP address of the device."
+                      autoDay:
+                        type: integer
+                        description: "Auto backup day."
+                      autoHour:
+                        type: integer
+                        description: "Auto backup hour."
+                      autoWeeks:
+                        type: integer
+                        description: "Auto backup frequency in weeks."
+                      # ... other properties of deviceInfo ...
+                  backups:
+                    type: array
+                    description: "List of backups for the device."
+                    items:
+                      # ... schema for each backup ...
+                  scheduledBackups:
+                    type: array
+                    description: "List of scheduled backups for the device."
+                    items:
+                      # ... schema for each scheduled backup ...
+        500:
+          description: "Error message in case of server error."
+    put:
+      tags:
+        - "devices"    
+      summary: "Update a specific device"
+      description: "Updates the information of a device identified by its ID. Can modify details like name, IP address, backup schedule, etc."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "Unique identifier of the device to update"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: "Updated name of the device."
+                ip:
+                  type: string
+                  description: "Updated IP address of the device."
+                autoDay:
+                  type: integer
+                  description: "Updated auto backup day."
+                autoHour:
+                  type: integer
+                  description: "Updated auto backup hour."
+                autoWeeks:
+                  type: integer
+                  description: "Updated auto backup frequency in weeks."
+                # ... include other fields that can be updated ...
+      responses:
+        200:
+          description: "The updated device information"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: integer
+                    description: "The unique identifier of the updated device."
+                  name:
+                    type: string
+                    description: "The updated name of the device."
+                  type:
+                    type: string
+                    description: "The updated type of the device."
+                  ip:
+                    type: string
+                    description: "The updated IP address of the device."
+                  autoDay:
+                    type: integer
+                    description: "Updated auto backup day."
+                  autoHour:
+                    type: integer
+                    description: "Updated auto backup hour."
+                  autoWeeks:
+                    type: integer
+                    description: "Updated auto backup frequency in weeks."
+                  # ... other properties of the updated device ...
+        500:
+          description: "Error message in case of server error."
