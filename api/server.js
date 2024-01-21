@@ -37,7 +37,7 @@ const swaggerOptions = {
                 description: 'Device management'
             },
             {
-                name: 'schedules',
+                name: 'schedule',
                 description: 'Schedule management'
             },
             {
@@ -63,5 +63,5 @@ const deviceRoutes = require('./v1/routes/deviceRoutes');
 app.use('/api', deviceRoutes);
 
 app.listen(port, () => {
-    console.log(`AutoBkGUI backend listening at http://localhost:${port}`);
+    console.log(`AutoBk Controller API listening at http://localhost:${port}`);
 });

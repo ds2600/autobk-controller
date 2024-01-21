@@ -6,6 +6,12 @@ const Backup = require('../models/Backup');
 const Schedule = require('../models/Schedule');
 const config = require('../../../config');
 
+/**
+ * Retrieves a list of all devices.
+ * 
+ * @param {string} [type='all'] - Optional. The type of devices to retrieve. Default is 'all'.
+ * @returns {Promise<Array>} A promise that resolves to an array of device objects.
+ */
 exports.getDeviceList = async (type = 'all') => {
     try {
         const devices = await Device.findAll({
@@ -52,6 +58,12 @@ exports.getDeviceList = async (type = 'all') => {
     }
 };
 
+/**
+ * Retrieves information about a specific device by its ID.
+ * 
+ * @param {number} deviceId - The ID of the device to retrieve information for.
+ * @returns {Promise<Object>} A promise that resolves to an object containing the device's information.
+ */
 exports.getDeviceInfo = async (deviceId) => {
     try {
         const device = await Device.findByPk(deviceId);
@@ -106,6 +118,12 @@ exports.getDeviceInfo = async (deviceId) => {
     }
 };
 
+/**
+ * Retrieves all backups for a specific device.
+ * 
+ * @param {number} deviceId - The ID of the device to retrieve backups for.
+ * @returns {Promise<Array>} A promise that resolves to an array of backup objects.
+ */
 exports.getAllBackups = async (deviceId) => {
     try {
         const backups = await Backup.findAll({
@@ -128,6 +146,13 @@ exports.getAllBackups = async (deviceId) => {
     }
 };
 
+
+/**
+ * Retrieves all scheduled backups for a specific device.
+ * 
+ * @param {number} deviceId - The ID of the device to retrieve scheduled backups for.
+ * @returns {Promise<Array>} A promise that resolves to an array of scheduled backup objects.
+ */
 exports.getScheduledBackups = async (deviceId) => {
     try {
         const schedules = await Schedule.findAll({
@@ -150,6 +175,14 @@ exports.getScheduledBackups = async (deviceId) => {
     }
 };
 
+
+/**
+ * Adds a new device with the provided data.
+ * 
+ * @param {Object} deviceData - The data for the new device.
+ * @returns {Promise<Object>} A promise that resolves to the newly added device object.
+ * @throws {Error} Throws an error if the device type is invalid or other validation fails.
+ */
 exports.addDevice = async (deviceData) => {
     try {
 
@@ -209,6 +242,13 @@ exports.addDevice = async (deviceData) => {
     }
 };
 
+/**
+ * Adds a new device with the provided data.
+ * 
+ * @param {Object} deviceData - The data for the new device.
+ * @returns {Promise<Object>} A promise that resolves to the newly added device object.
+ * @throws {Error} Throws an error if the device type is invalid or other validation fails.
+ */
 exports.updateDevice = async (deviceId, deviceData) => {
     try {
         const device = await Device.findByPk(deviceId);
@@ -261,9 +301,18 @@ exports.updateDevice = async (deviceId, deviceData) => {
     }
 };
 
-exports.scheduleBackup = async (deviceId) => {
+/**
+ * Schedule a backup for a device.
+ * 
+ * @param {number} deviceId - The ID of the device to schedule the backup for.
+ * @param {string} [scheduledTime] - Optional. The time to schedule the backup. 
+ *                                   Should be in ISO 8601 format (e.g., "2024-01-26T01:00:00.000Z").
+ *                                   If not provided, the current time will be used.
+ * @returns {Promise<Object>} The new schedule object.
+ */
+exports.scheduleBackup = async (deviceId, scheduledTime) => {
     try {
-        const dateTimeNow = new Date();
+        const dateTime = scheduledTime ? new Date(scheduledTime) : new Date();
         const deviceInfo = await Device.findByPk(deviceId);
 
         if (deviceInfo && deviceInfo.sType === 'OneNet') {
@@ -276,7 +325,7 @@ exports.scheduleBackup = async (deviceId) => {
         const newSchedule = await Schedule.create({
             kDevice: deviceId,
             sState: 'Manual',
-            tTime: dateTimeNow,
+            tTime: dateTime.toISOString(),
             sComment: 'Scheduled by user'
         });
 
@@ -287,6 +336,13 @@ exports.scheduleBackup = async (deviceId) => {
     }
 };
 
+/**
+ * Retrieves the ID of the OneNetLog device corresponding to a given OneNet device name.
+ * 
+ * @param {string} deviceName - The name of the OneNet device.
+ * @returns {Promise<number>} A promise that resolves to the ID of the OneNetLog device.
+ * @throws {Error} Throws an error if the OneNetLog device is not found.
+ */
 const getEasLogId = async (deviceName) => {
     try {
         const easLogName = `${deviceName}-Log`;

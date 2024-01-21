@@ -3,6 +3,9 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../sequelize');
 
+const config = require('../../../config');
+const deviceTypeValues = config.deviceTypes.map(type => type.value);
+
 const Device = sequelize.define('Device', {
     kSelf: {
         type: DataTypes.INTEGER,
@@ -16,7 +19,8 @@ const Device = sequelize.define('Device', {
         unique: true
     },
     sType: {
-        type: DataTypes.ENUM('APEX', 'DCM', 'CAP', 'Inca1', 'Vista', 'OneNet', 'OneNetLog', 'TC600E', 'CXCHP', 'PSSend', 'Quartet'),
+        type: DataTypes.ENUM,
+        values: deviceTypeValues,
         allowNull: false
       },
       sIP: {

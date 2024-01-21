@@ -5,6 +5,45 @@ info:
   description: "API for AutoBk GUI"
 
 paths:
+  /schedule:
+    post:
+      tags:
+        - "schedule"
+      summary: "Schedule a backup for a device"
+      description: "Creates a new backup schedule for a specified device."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: integer
+                  description: "The unique identifier of the device for which the backup is to be scheduled."
+      responses:
+        200:
+          description: "Details of the scheduled backup"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scheduleId:
+                    type: integer
+                    description: "The unique identifier of the scheduled backup."
+                  state:
+                    type: string
+                    description: "The state of the scheduled backup."
+                  scheduledTime:
+                    type: string
+                    format: date-time
+                    description: "The time at which the backup is scheduled."
+                  comment:
+                    type: string
+                    description: "Any comments related to the backup schedule."
+        500:
+          description: "Error message in case of server error."
   /devices:
     get:
       tags:
