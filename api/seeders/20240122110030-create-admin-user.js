@@ -8,7 +8,7 @@ module.exports = {
     const passwordHash = bcrypt.hashSync('p@ssw0rd', 10);
 
     return queryInterface.bulkInsert('User', [{
-      email: 'admin2@example.com',
+      email: 'admin@example.com',
       passwordHash: passwordHash,
       isDailyReportEnabled: false,
       userLevel: 'Administrator'
