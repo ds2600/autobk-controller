@@ -3,9 +3,9 @@
 const express = require('express');
 const router = express.Router();
 const deviceController = require('../controllers/deviceController');
-const scheduleController = require('../controllers/scheduleController');
+const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
 
-router.get('/devices', async (req, res) => {
+router.get('/devices', authenticateToken, checkRole('Basic'), async (req, res) => {
     try {
         const devices = await deviceController.getDeviceList();
         res.json(devices);
@@ -14,7 +14,7 @@ router.get('/devices', async (req, res) => {
     }
 });
 
-router.get('/devices/:id', async (req, res) => {
+router.get('/devices/:id', authenticateToken, checkRole('Basic'), async (req, res) => {
     try {
         const deviceId = req.params.id;
         const deviceInfo = await deviceController.getDeviceInfo(deviceId);
@@ -32,7 +32,7 @@ router.get('/devices/:id', async (req, res) => {
     }
 });
 
-router.put('/devices/:id', async (req, res) => {
+router.put('/devices/:id', authenticateToken, checkRole('Basic'), async (req, res) => {
     try {
         const deviceId = req.params.id;
         const deviceData = req.body;
@@ -44,7 +44,7 @@ router.put('/devices/:id', async (req, res) => {
     }
 });
 
-router.post('/devices', async (req, res) => {
+router.post('/devices', authenticateToken, checkRole('Basic'), async (req, res) => {
     try {
         const newDeviceData = req.body; 
         const newDevice = await deviceController.addDevice(newDeviceData);

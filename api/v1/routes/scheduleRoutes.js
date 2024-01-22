@@ -3,10 +3,9 @@
 const express = require('express');
 const router = express.Router();
 const scheduleController = require('../controllers/scheduleController');
-
 const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
 
-router.get('/schedules', async (req, res) => {
+router.get('/schedules', authenticateToken, checkRole('Basic'), async (req, res) => {
     try {
         const schedules = await scheduleController.getAllSchedules();
         res.json(schedules);
@@ -37,6 +36,6 @@ router.post('/schedules/:deviceId', authenticateToken, checkRole('Basic'), async
     }
 });
 
-router.post('/unschedule', async (req, res) => { });
+router.post('/unschedule', authenticateToken, checkRole('Basic'), async (req, res) => { });
 
 module.exports = router;

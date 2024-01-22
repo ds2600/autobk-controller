@@ -20,9 +20,13 @@ tags:
     description: 'Schedule management'
   - name: 'backups'
     description: 'Backup management'
+  - name: 'users'
+    description: 'User management'
 paths:
   /schedules:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "schedules"
       summary: "Retrieve all schedules"
@@ -58,6 +62,8 @@ paths:
 
   /schedules/{deviceId}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "schedules"
       summary: "Retrieve all scheduled backups for a specific device"
@@ -98,6 +104,8 @@ paths:
         500:
           description: "Error message in case of server error."
     post:
+      security:
+        - bearerAuth: []
       tags:
         - "schedules"
       summary: "Schedule a backup for a device"
@@ -148,6 +156,8 @@ paths:
           description: "Error message in case of server error."
   /devices:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "devices"
       summary: "Retrieve a list of all devices"
@@ -193,6 +203,8 @@ paths:
         500:
           description: "Error message in case of server error."
     post:
+      security:
+        - bearerAuth: []
       tags:
         - "devices"
       summary: "Add a new device"
@@ -258,6 +270,8 @@ paths:
 
   /devices/{id}:
     get:
+      security:
+        - bearerAuth: []
       tags:
         - "devices"
       summary: "Retrieve information about a specific device"
@@ -315,6 +329,8 @@ paths:
         500:
           description: "Error message in case of server error."
     put:
+      security:
+        - bearerAuth: []
       tags:
         - "devices"    
       summary: "Update a specific device"
@@ -379,5 +395,43 @@ paths:
                     type: integer
                     description: "Updated auto backup frequency in weeks."
                   # ... other properties of the updated device ...
+        500:
+          description: "Error message in case of server error."
+  /login:
+    post:
+      security: []
+      tags:
+        - "users"
+      summary: "Login"
+      description: "Logs in a user and returns a JWT token."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: "Email address of the user."
+                password:
+                  type: string
+                  description: "Password of the user."
+      responses:
+        200:
+          description:  "JWT token"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: "JWT token"
+                  userLevel:
+                    type: string
+                    description: "User level"
+        401:
+          description: "Invalid credentials"
         500:
           description: "Error message in case of server error."
