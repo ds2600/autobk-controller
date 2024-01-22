@@ -3,8 +3,6 @@ info:
   title: "AutoBk GUI API"
   version: "1.0.0"
   description: "API for AutoBk GUI"
-servers:
-  - url: 'http://localhost:5000/api'
 components:
   securitySchemes:
     bearerAuth:
@@ -435,3 +433,57 @@ paths:
           description: "Invalid credentials"
         500:
           description: "Error message in case of server error."
+  /register:
+    post:
+      tags:
+        - users
+      summary: Register a new user
+      description: Creates a new user account. Requires administrator privileges.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+                isDailyReportEnabled:
+                  type: boolean
+                  description: Flag to enable or disable daily reports for the user
+                userLevel:
+                  type: string
+                  enum: [Administrator, User, Basic]
+                  description: The user level for the new account
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Success message
+                  userId:
+                    type: integer
+                    description: The unique identifier of the newly created user
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message

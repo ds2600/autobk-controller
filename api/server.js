@@ -8,6 +8,11 @@ const sequelize = require('./sequelize');
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
+        servers: [
+            {
+                url: 'http://localhost:5000/api/'
+            }
+        ]
     },
     apis: ['./api/v1/swagger.yml'] 
 };
