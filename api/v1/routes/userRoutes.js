@@ -5,13 +5,13 @@ const router = express.Router();
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
+const db = require('../models');
 const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
 
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ where: { email } });
+        const user = await db.User.findOne({ where: { email } });
         if (user && bcrypt.compareSync(password, user.passwordHash)) {
             const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: '1h' });
             res.json({ token, userLevel: user.userLevel });
@@ -32,7 +32,7 @@ router.post('/register', authenticateToken, checkRole('Administrator'), async (r
         const passwordHash = bcrypt.hashSync(password, 10);
 
         // Create user
-        const newUser = await User.create({
+        const newUser = await db.User.create({
             email,
             passwordHash,
             isDailyReportEnabled,
