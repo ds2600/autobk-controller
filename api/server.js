@@ -4,7 +4,6 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const express = require('express');
 const app = express();
-const port = 5000;
 const sequelize = require('./sequelize');
 
 const swaggerOptions = {
@@ -12,7 +11,7 @@ const swaggerOptions = {
         openapi: '3.0.0',
         servers: [
             {
-                url: process.env.REACT_APP_API_URL + '/api/'
+                url: process.env.REACT_APP_API_URL + ":" + process.env.REACT_APP_API_PORT + '/api/'
             }
         ]
     },
@@ -36,6 +35,4 @@ app.use('/api', deviceRoutes);
 app.use('/api', scheduleRoutes);
 app.use('/api', userRoutes);
 
-app.listen(port, () => {
-    console.log(`AutoBk Controller API listening at http://localhost:${port}`);
-});
+module.exports = app;

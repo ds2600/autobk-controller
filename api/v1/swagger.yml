@@ -395,6 +395,33 @@ paths:
                   # ... other properties of the updated device ...
         500:
           description: "Error message in case of server error."
+    delete:
+      tags:
+        - "devices"
+      summary: "Delete a specific device"
+      description: "Deletes a device and all associated backups and schedules based on its unique identifier."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: "Unique identifier of the device to delete"
+      responses:
+        200:
+          description: "Device and all associated data deleted successfully"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: "Success message"
+        500:
+          description: "Error message in case of server error."
+      security:
+        - bearerAuth: []         
   /login:
     post:
       security: []

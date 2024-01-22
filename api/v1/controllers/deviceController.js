@@ -211,9 +211,10 @@ exports.addDevice = async (deviceData) => {
 };
 
 /**
- * Adds a new device with the provided data.
+ * Updates device with the provided data.
  * 
- * @param {Object} deviceData - The data for the new device.
+ * @param {Object} deviceId - The unique ID of the device to update.
+ * @param {Object} deviceData - The data for the updated device.
  * @returns {Promise<Object>} A promise that resolves to the newly added device object.
  * @throws {Error} Throws an error if the device type is invalid or other validation fails.
  */
@@ -229,31 +230,33 @@ exports.updateDevice = async (deviceId, deviceData) => {
             throw new Error('Cannot change device type');
         }
 
+        // Map API Fields to DB Fields
+        const updateData = {};
+        if (deviceData.name) updateData.sName = deviceData.name;
+
         // For OneNetLog devices, restrict updates to timing
         if (device.sType === 'OneNetLog') {
             const { autoDay, autoHour, autoWeeks } = deviceData;
-        } else {
-            await device.update(deviceData);
+        } 
 
-            // If the device is a OneNet device, update its OneNetLog device
-            if (device.sType === 'OneNet') {
-                const logDevice = await Device.findOne({
-                    where: { sName: `${device.sName}-Log`, sType: 'OneNetLog' }
-                });
+        // If the device is a OneNet device, update its OneNetLog device
+        if (device.sType === 'OneNet') {
+            const logDevice = await Device.findOne({
+                where: { sName: `${device.sName}-Log`, sType: 'OneNetLog' }
+            });
 
-                if (logDevice) {
-                    const logUpdateData = {
-                        sName: `${deviceData.name || device.sName}-Log`,
-                        sIP: updateData.ip || device.sIP,
-                    };
-                    await logDevice.update(logUpdateData);
-                }
+            if (logDevice) {
+                const logUpdateData = {
+                    sName: `${deviceData.name || device.sName}-Log`,
+                    sIP: updateData.ip || device.sIP,
+                };
+                await logDevice.update(logUpdateData);
             }
         }
 
         // TODO: Validate and sanitize input
 
-        await device.update(deviceData);
+        await device.update(updateData);
 
         return {
             deviceId: device.kSelf,
@@ -289,3 +292,34 @@ const getEasLogId = async (deviceName) => {
         throw error;
     }
 }
+
+/**
+ * Deletes a device and all associated backups and schedules.
+ * 
+ * @param {number} deviceId - The ID of the device to delete.
+ * @returns {Promise<void>} A promise that resolves when the operation is complete.
+ */
+exports.deleteDevice = async (deviceId) => {
+    try {
+        const device = await Device.findByPk(deviceId);
+        if (!device) {
+            throw new Error('Device not found');
+        }
+
+        // Delete all associated backups
+        await Backup.destroy({
+            where: { kDevice: deviceId }
+        });
+
+        // Delete all associated schedules
+        await Schedule.destroy({
+            where: { kDevice: deviceId }
+        });
+
+        // Finally, delete the device
+        await device.destroy();
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
