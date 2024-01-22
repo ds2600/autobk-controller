@@ -2,49 +2,12 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const express = require('express');
 const app = express();
-const port = 5050;
+const port = 5000;
 const sequelize = require('./sequelize');
 
 const swaggerOptions = {
     definition: {
         openapi: '3.0.0',
-        info: {
-            title: 'AutoBkGUI API',
-            version: '1.0.0',
-            description: 'AutoBkGUI API'
-        },
-        servers: [
-            {
-                url: 'http://localhost:5050/api'
-            }
-        ],
-        components: {
-            securitySchemes: {
-                basicAuth: {
-                    type: 'http',
-                    scheme: 'basic'
-                }
-            }
-        },
-        security: [
-            {
-                basicAuth: []
-            }
-        ],
-        tags: [
-            {
-                name: 'devices',
-                description: 'Device management'
-            },
-            {
-                name: 'schedule',
-                description: 'Schedule management'
-            },
-            {
-                name: 'backups',
-                description: 'Backup management'
-            }
-        ],
     },
     apis: ['./api/v1/swagger.yml'] 
 };
@@ -59,8 +22,12 @@ sequelize.sync().then(() => {
 app.use(express.json());
 
 const deviceRoutes = require('./v1/routes/deviceRoutes');
+const scheduleRoutes = require('./v1/routes/scheduleRoutes');
+const userRoutes = require('./v1/routes/userRoutes');
 
 app.use('/api', deviceRoutes);
+app.use('/api', scheduleRoutes);
+app.use('/api', userRoutes);
 
 app.listen(port, () => {
     console.log(`AutoBk Controller API listening at http://localhost:${port}`);

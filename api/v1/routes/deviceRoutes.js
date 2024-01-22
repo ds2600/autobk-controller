@@ -1,6 +1,9 @@
+// api/v1/routes/deviceRoutes.js
+
 const express = require('express');
 const router = express.Router();
 const deviceController = require('../controllers/deviceController');
+const scheduleController = require('../controllers/scheduleController');
 
 router.get('/devices', async (req, res) => {
     try {
@@ -51,18 +54,5 @@ router.post('/devices', async (req, res) => {
         res.status(500).send(error.message);
     }
 });
-
-router.post('/schedule', async (req, res) => {
-    try {
-        const { deviceId } = req.body;
-        const result = await deviceController.scheduleBackup(deviceId);
-        res.json(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-router.post('/unschedule', async (req, res) => { });
 
 module.exports = router;

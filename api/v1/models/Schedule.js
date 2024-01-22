@@ -1,4 +1,4 @@
-// api/models/Schedule.js
+// api/v1/models/Schedule.js
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../sequelize');
@@ -32,6 +32,12 @@ const Schedule = sequelize.define('Schedule', {
 }, {
     tableName: 'Schedule',
     timestamps: false
+});
+
+const Device = require('./Device');
+Schedule.belongsTo(Device, {
+        foreignKey: 'kDevice',
+        as: 'Device'
 });
 
 module.exports = Schedule;

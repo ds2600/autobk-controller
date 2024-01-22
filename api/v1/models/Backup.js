@@ -1,4 +1,4 @@
-// api/models/Backup.js
+// api/v1/models/Backup.js
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../sequelize');

@@ -3,24 +3,123 @@ info:
   title: "AutoBk GUI API"
   version: "1.0.0"
   description: "API for AutoBk GUI"
-
+servers:
+  - url: 'http://localhost:5000/api'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []
+tags:
+  - name: 'devices'
+    description: 'Device management'
+  - name: 'schedules'
+    description: 'Schedule management'
+  - name: 'backups'
+    description: 'Backup management'
 paths:
-  /schedule:
+  /schedules:
+    get:
+      tags:
+        - "schedules"
+      summary: "Retrieve all schedules"
+      description: "Fetches a list of all backup schedules."
+      responses:
+        200:
+          description: "A list of all schedules"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    scheduleId:
+                      type: integer
+                      description: "The unique identifier of the schedule."
+                    deviceId:
+                      type: integer
+                      description: "The unique identifier of the device associated with the schedule."
+                    state:
+                      type: string
+                      description: "The state of the schedule."
+                    scheduledTime:
+                      type: string
+                      format: date-time
+                      description: "The time at which the backup is scheduled."
+                    comment:
+                      type: string
+                      description: "Any comments related to the backup schedule."
+        500:
+          description: "Error message in case of server error."
+
+  /schedules/{deviceId}:
+    get:
+      tags:
+        - "schedules"
+      summary: "Retrieve all scheduled backups for a specific device"
+      description: "Fetches a list of all scheduled backups for a specified device, excluding those that have failed or are complete."
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: integer
+          description: "Unique identifier of the device to retrieve scheduled backups for."
+      responses:
+        200:
+          description: "A list of scheduled backups for the specified device"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    scheduleId:
+                      type: integer
+                      description: "The unique identifier of the schedule."
+                    state:
+                      type: string
+                      description: "The state of the schedule."
+                    scheduledTime:
+                      type: string
+                      format: date-time
+                      description: "The time at which the backup is scheduled."
+                    attemptCount:
+                      type: integer
+                      description: "The number of attempts made for the backup."
+                    comment:
+                      type: string
+                      description: "Any comments related to the backup schedule."
+        500:
+          description: "Error message in case of server error."
     post:
       tags:
-        - "schedule"
+        - "schedules"
       summary: "Schedule a backup for a device"
       description: "Creates a new backup schedule for a specified device."
+      parameters:
+        - in: path
+          name: deviceId
+          required: true
+          schema:
+            type: integer
+          description: "The unique identifier of the device for which the backup is to be scheduled."
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
               properties:
-                deviceId:
-                  type: integer
-                  description: "The unique identifier of the device for which the backup is to be scheduled."
+                scheduledTime:
+                  type: string
+                  format: date-time
+                  description: "Optional. The time to schedule the backup in ISO 8601 format. If not provided, the current time will be used."
       responses:
         200:
           description: "Details of the scheduled backup"
@@ -32,6 +131,9 @@ paths:
                   scheduleId:
                     type: integer
                     description: "The unique identifier of the scheduled backup."
+                  deviceId:
+                    type: integer
+                    description: "The unique identifier of the device for which the backup is scheduled."
                   state:
                     type: string
                     description: "The state of the scheduled backup."

@@ -1,4 +1,4 @@
-// api/models/Device.js
+// api/v1/models/Device.js
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../../sequelize');
