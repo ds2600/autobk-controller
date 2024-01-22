@@ -1,7 +1,14 @@
+/**
+ * Test a password against a stored hash.
+ * 
+ * @param {string} password - The password to test.
+ * @param {string} storedHash - The hash to test against.
+ * @returns {<boolean>} Whether the password matches the hash.
+ */
 const bcrypt = require('bcryptjs');
 
-const storedHash = '$2a$10$NWcrnMPY0IL8e5zBpYRNwuul1pY5CN1AZtmWaaq.dGlCCAHjocZra';
-const passwordToTest = 'p@ssw0rd'; 
+const passwordToTest = process.argv[2]; 
+const storedHash = process.argv[3];
 
 const isMatch = bcrypt.compareSync(passwordToTest, storedHash);
 console.log('Password match:', isMatch);

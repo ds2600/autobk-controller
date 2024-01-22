@@ -1,4 +1,9 @@
-// Description: Generates a hash from a password.
+/**
+ * Generates a hash from a password.
+ * 
+ * @param {string} password - The password to hash.
+ * @returns {<string>} The hashed password.
+ */
 
 const bcrypt = require('bcryptjs');
 
