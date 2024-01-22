@@ -1,9 +1,7 @@
 // api/v1/controllers/deviceController.js
 
 const Sequelize = require('sequelize');
-const Device = require('../models/Device');
-const Backup = require('../models/Backup');
-const Schedule = require('../models/Schedule');
+const { Device, Backup, Schedule } = require('../models');
 const config = require('../../../config');
 
 /**

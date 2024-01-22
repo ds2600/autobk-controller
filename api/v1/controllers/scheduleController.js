@@ -1,9 +1,7 @@
 // api/v1/controllers/scheduleController.js
 
 const Sequelize = require('sequelize');
-const Device = require('../models/Device');
-const Schedule = require('../models/Schedule');
-
+const { Schedule, Device } = require('../models');
 
 /**
  * Retrieves all schedules from the database along with the corresponding device names.
