@@ -3,6 +3,7 @@ require('dotenv').config();
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const sequelize = require('./sequelize');
 
@@ -26,6 +27,8 @@ sequelize.sync().then(() => {
 });
 
 app.use(express.json());
+
+app.use(cors());
 
 const deviceRoutes = require('./v1/routes/deviceRoutes');
 const scheduleRoutes = require('./v1/routes/scheduleRoutes');
