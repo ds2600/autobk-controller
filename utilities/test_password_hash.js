@@ -10,5 +10,13 @@ const bcrypt = require('bcryptjs');
 const passwordToTest = process.argv[2]; 
 const storedHash = process.argv[3];
 
-const isMatch = bcrypt.compareSync(passwordToTest, storedHash);
-console.log('Password match:', isMatch);
+console.log('Password to test:', passwordToTest);
+console.log('Stored hash:', storedHash);
+
+bcrypt.compare(passwordToTest, storedHash)
+  .then(isMatch => {
+    console.log('Password match:', isMatch);
+  })
+  .catch(err => {
+    console.error('Error during comparison:', err.message);
+  });
