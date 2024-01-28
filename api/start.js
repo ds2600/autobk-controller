@@ -1,6 +1,7 @@
 const app = require('./server');
-const port = process.env.PORT || 5000;
+const port = process.env.REACT_APP_API_PORT || 5000;
+const host = process.env.API_IP;
 
-app.listen(port, () => {
-    console.log(`AutoBk Controller API listening at http://localhost:${port}`);
+app.listen(port, host, () => {
+    console.log(`AutoBk Controller API listening at http://${host}:${port}`);
 });

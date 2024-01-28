@@ -1,5 +1,6 @@
-{
-    "deviceTypes": [
+// Application Configuration
+const appConfig = {
+    deviceTypes: [
       { "dbValue": "APEX", "readableValue": "APEX-1000" },
       { "dbValue": "DCM", "readableValue": "DCM 9902" },
       { "dbValue": "CAP", "readableValue": "CAP 1000" },
@@ -13,3 +14,5 @@
       { "dbValue": "Quartet", "readableValue": "Quartet" }
     ]
   }
+  
+  module.exports = { appConfig };

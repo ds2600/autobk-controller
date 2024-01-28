@@ -2,7 +2,7 @@
 
 const Sequelize = require('sequelize');
 const { Device, Backup, Schedule } = require('../models');
-const config = require('../../../config');
+const { appConfig } = require('../../../config/appConfig.js');
 
 /**
  * Retrieves a list of all devices.
@@ -154,7 +154,7 @@ exports.getAllBackups = async (deviceId) => {
 exports.addDevice = async (deviceData) => {
     try {
 
-        const validTypes = config.deviceTypes.map(type => type.dbValue);
+        const validTypes = appConfig.deviceTypes.map(type => type.dbValue);
         if (!validTypes.includes(deviceData.type)) {
             throw new Error('Invalid device type');
         }

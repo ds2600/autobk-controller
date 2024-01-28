@@ -1,7 +1,7 @@
 // api/v1/models/Device.js
 
-const config = require('../../../config');
-const deviceTypeValues = config.deviceTypes.map(type => type.value);
+const { appConfig } = require('../../../config/appConfig.js');
+const deviceTypeValues = appConfig.deviceTypes.map(type => type.value);
 
 module.exports = (sequelize, DataTypes) => {
   const Device = sequelize.define('Device', {
