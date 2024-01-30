@@ -11,7 +11,15 @@ module.exports = (sequelize, DataTypes) => {
         email: DataTypes.STRING,
         passwordHash: DataTypes.STRING,
         isDailyReportEnabled: DataTypes.BOOLEAN,
-        userLevel: DataTypes.ENUM('Administrator', 'User', 'Basic')
+        userLevel: DataTypes.ENUM('Administrator', 'User', 'Basic'),
+        resetToken: {
+            type: DataTypes.STRING, 
+            allowNull: true, 
+        },
+        resetTokenExpiration: {
+            type: DataTypes.DATE, 
+            allowNull: true, 
+        },
     }, {
         tableName: 'User',
         timestamps: false,
