@@ -26,7 +26,14 @@ const checkRole = (requiredRole) => (req, res, next) => {
     }
 };
 
+const accountIsLocked = () => (req, res, next) => {
+    if (req.user.isLocked) {
+        return res.status(403).json({ error: 'Account locked' });
+    }
+};
+
 module.exports = {
     authenticateToken,
-    checkRole
+    checkRole,
+    accountIsLocked
 };

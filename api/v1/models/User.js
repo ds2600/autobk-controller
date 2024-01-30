@@ -20,6 +20,14 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE, 
             allowNull: true, 
         },
+        loginAttempts: {
+            type: DataTypes.INTEGER.UNSIGNED,
+            defaultValue: 0,
+        },
+        isLocked: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
     }, {
         tableName: 'User',
         timestamps: false,

@@ -13,10 +13,30 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await db.User.findOne({ where: { email } });
-        if (user && bcrypt.compareSync(password, user.passwordHash)) {
+
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        if (user.isLocked) {
+            return res.status(403).json({ error: 'Account locked' });
+        }
+
+        if (bcrypt.compareSync(password, user.passwordHash)) {
+            user.loginAttempts = 0;
+            await user.save();
+
             const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: '1h' });
             res.json({ token, userLevel: user.userLevel });
         } else {
+            user.loginAttempts++;
+
+            if (user.loginAttempts >= process.env.LOGIN_ATTEMPTS_THRESHOLD) {
+                user.isLocked = true;
+            }
+
+            await user.save();
+
             res.status(401).json({ error: 'Invalid credentials' });
         }
     } catch (error) {
@@ -197,7 +217,7 @@ router.post('/user/reset-password-request', async (req, res) => {
     }
 });
 
-router.get('/reset-password', async (req, res) => {
+router.get('/user/reset-password', async (req, res) => {
     try {
         const { token, newPassword } = req.body;
 
@@ -220,6 +240,25 @@ router.get('/reset-password', async (req, res) => {
         await user.save();
 
         res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.put('/user/unlock/:userId', authenticateToken, checkRole('Administrator'), async (req, res) => {
+    try {
+        const userIdToUnlock = parseInt(req.params.userId);
+        const userToUpdate = await db.User.findByPk(userIdToUnlock);
+
+        if (!userToUpdate) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        userToUpdate.isLocked = false;
+        await userToUpdate.save();
+
+        res.status(200).json({ message: 'User account unlocked successfully' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
