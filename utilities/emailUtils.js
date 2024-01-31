@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
-const db = require('../models');
+const db = require('../api/v1/models');
 
 function generateUniqueToken() {
     return uuidv4();

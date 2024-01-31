@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../models');
 const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
-const { generateUniqueToken, sendPasswordResetEmail, validateResetToken } = require('../utilities/emailUtils');
+const { generateUniqueToken, sendPasswordResetEmail, validateResetToken } = require('../../../utilities/emailUtils');
 
 router.post('/login', async (req, res) => {
     try {

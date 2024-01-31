@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING, 
             allowNull: true, 
         },
-        resetTokenExpiration: {
+        resetTokenExpires: {
             type: DataTypes.DATE, 
             allowNull: true, 
         },
