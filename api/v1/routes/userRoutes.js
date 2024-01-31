@@ -8,31 +8,37 @@ const bcrypt = require('bcryptjs');
 const db = require('../models');
 const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
 const { generateUniqueToken, sendPasswordResetEmail, validateResetToken } = require('../../../utilities/emailUtils');
+const logger = require('../../../config/logConfig.js')
 
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        logger.info('Login attempt: ' + email);
         const user = await db.User.findOne({ where: { email } });
 
         if (!user) {
+            logger.warn('User does not exist: ' + email);
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         if (user.isLocked) {
+            logger.warn('Account locked: ' + email);
             return res.status(403).json({ error: 'Account locked' });
         }
 
         if (bcrypt.compareSync(password, user.passwordHash)) {
             user.loginAttempts = 0;
             await user.save();
+            logger.info('Login successful: ' + email);
 
             const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: '1h' });
             res.json({ token, userLevel: user.userLevel });
         } else {
             user.loginAttempts++;
-
+            logger.warn('Invalid credentials: ' + email);
             if (user.loginAttempts >= process.env.LOGIN_ATTEMPTS_THRESHOLD) {
                 user.isLocked = true;
+                logger.warn('Account has been locked: ' + email);
             }
 
             await user.save();
@@ -40,7 +46,7 @@ router.post('/login', async (req, res) => {
             res.status(401).json({ error: 'Invalid credentials' });
         }
     } catch (error) {
-        console.error(error);
+        logger.error('Error: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
