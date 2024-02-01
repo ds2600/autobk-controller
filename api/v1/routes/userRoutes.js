@@ -2,73 +2,32 @@
 
 const express = require('express');
 const router = express.Router();
+const userController = require('../controllers/userController');
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../models');
 const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
 const { generateUniqueToken, sendPasswordResetEmail, validateResetToken } = require('../../../utilities/emailUtils');
-const logger = require('../../../config/logConfig.js')
+const logConfig = require('../../../config/logConfig.js')
+const logger = logConfig.defaultLogger;
 
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        logger.info('Login attempt: ' + email);
-        const user = await db.User.findOne({ where: { email } });
-
-        if (!user) {
-            logger.warn('User does not exist: ' + email);
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        if (user.isLocked) {
-            logger.warn('Account locked: ' + email);
-            return res.status(403).json({ error: 'Account locked' });
-        }
-
-        if (bcrypt.compareSync(password, user.passwordHash)) {
-            user.loginAttempts = 0;
-            await user.save();
-            logger.info('Login successful: ' + email);
-
-            const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            res.json({ token, userLevel: user.userLevel });
-        } else {
-            user.loginAttempts++;
-            logger.warn('Invalid credentials: ' + email);
-            if (user.loginAttempts >= process.env.LOGIN_ATTEMPTS_THRESHOLD) {
-                user.isLocked = true;
-                logger.warn('Account has been locked: ' + email);
-            }
-
-            await user.save();
-
-            res.status(401).json({ error: 'Invalid credentials' });
-        }
+        const user = await userController.login(email, password);
+        res.status(200).json(user);
     } catch (error) {
-        logger.error('Error: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
 
 router.post('/register', authenticateToken, checkRole('Administrator'), async (req, res) => {
     try {
-        const { email, password, isDailyReportEnabled, userLevel } = req.body;
-
-        // hash password
-        const passwordHash = bcrypt.hashSync(password, 10);
-
-        // Create user
-        const newUser = await db.User.create({
-            email,
-            passwordHash,
-            isDailyReportEnabled,
-            userLevel
-        });
-
-        res.status(201).json({ message: "User created successfully", userId: newUser.kSelf });
+        const { email, password, userLevel } = req.body;
+        const result = await userController.register(email, password, userLevel);
+        res.status(201).json(result);
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -78,38 +37,10 @@ router.put('/user/update-settings/:userId', authenticateToken, async (req, res) 
         const userIdToUpdate = parseInt(req.params.userId);
         const loggedInUserId = req.user.userId;
         const loggedInUserRole = req.user.userLevel;
-
-        // Allow user to update their own settings or allow Administrator to update any user's settings
-        if (loggedInUserId !== userIdToUpdate && loggedInUserRole !== 'Administrator') {
-            return res.status(403).json({ error: 'Forbidden' });
-        }
-
-        const userUpdates = req.body;
-
-        // Find the user by ID
-        const user = await db.User.findByPk(userIdToUpdate);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        // Update allowed fields, with special rules for certain fields
-        Object.keys(userUpdates).forEach(key => {
-            if (key === 'kSelf') {
-                // Skip updating kSelf
-            } else if (key === 'userLevel' && loggedInUserRole !== 'Administrator') {
-                // Only allow Administrators to update userLevel
-            } else if (key === 'passwordHash') {
-                // Skip updating passwordHash directly, handle through a separate endpoint
-            } else if (key in user) {
-                user[key] = userUpdates[key];
-            }
-        });
-
-        await user.save();
-
-        res.status(200).json({ message: 'User settings updated successfully' });
+        const result = await userController.updateSettings(userIdToUpdate, req.body, loggedInUserId, loggedInUserRole);
+        res.status(200).json(result);
     } catch (error) {
-        console.error(error);
+        logger.error('Error updating user settings: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -119,23 +50,11 @@ router.put('/user/change-password', authenticateToken, async (req, res) => {
         const { currentPassword, newPassword } = req.body;
         const userId = req.user.userId;
 
-        const user = await db.User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
+        const result = await userController.changePassword(currentPassword, newPassword, userId);
 
-        // Verify current password
-        if (!bcrypt.compareSync(currentPassword, user.passwordHash)) {
-            return res.status(401).json({ error: 'Incorrect password' });
-        }
-
-        // Update with new hashed password
-        user.passwordHash = bcrypt.hashSync(newPassword, 10);
-        await user.save();
-
-        res.status(200).json({ message: 'Password updated successfully' });
+        res.status(200).json(result);
     } catch (error) {
-        console.error(error);
+        logger.error('Error changing password: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -143,23 +62,12 @@ router.put('/user/change-password', authenticateToken, async (req, res) => {
 router.delete('/user/:userId', authenticateToken, checkRole('Administrator'), async (req, res) => {
     try {
         const userIdToDelete = parseInt(req.params.userId);
+        const loggedInUser = req.user.userId;
 
-        // Check if the user trying to delete is not deleting their own account
-        if (req.user.userId === userIdToDelete) {
-            return res.status(400).json({ error: "Cannot delete own user account" });
-        }
-
-        const result = await db.User.destroy({
-            where: { kSelf: userIdToDelete }
-        });
-
-        if (result === 0) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
+        await userController.deleteUser(userIdToDelete, loggedInUser);
         res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
-        console.error(error);
+        logger.error('Error deleting user: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -260,7 +168,8 @@ router.put('/user/unlock/:userId', authenticateToken, checkRole('Administrator')
         if (!userToUpdate) {
             return res.status(404).json({ error: 'User not found' });
         }
-
+        
+        userToUpdate.loginAttempts = 0;
         userToUpdate.isLocked = false;
         await userToUpdate.save();
 

@@ -12,7 +12,12 @@ const appConfig = {
       { "dbValue": "CXCHP", "readableValue": "Alpha CXC-HP" },
       { "dbValue": "PSSend", "readableValue": "Sonifex PS-Send" },
       { "dbValue": "Quartet", "readableValue": "Quartet" }
-    ]
+    ],
+    userLevels: [
+      'Administrator',
+      'User',
+      'Basic',
+    ],
   }
   
   module.exports = { appConfig };

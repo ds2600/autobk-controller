@@ -1,5 +1,7 @@
 // api/v1/models/User.js
 
+const { appConfig: { userLevels } } = require('../../../config/appConfig');
+
 module.exports = (sequelize, DataTypes) => {
     const User = sequelize.define('User', {
         kSelf: {
@@ -11,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         email: DataTypes.STRING,
         passwordHash: DataTypes.STRING,
         isDailyReportEnabled: DataTypes.BOOLEAN,
-        userLevel: DataTypes.ENUM('Administrator', 'User', 'Basic'),
+        userLevel: DataTypes.ENUM(...userLevels),
         resetToken: {
             type: DataTypes.STRING, 
             allowNull: true, 
@@ -27,6 +29,15 @@ module.exports = (sequelize, DataTypes) => {
         isLocked: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
+        },
+        createdAt: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+        },
+        lastLogin: {
+            type: DataTypes.DATE,
+            allowNull: true,
         },
     }, {
         tableName: 'User',

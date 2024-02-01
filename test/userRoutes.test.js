@@ -4,11 +4,13 @@ const { sequelize } = require('../api/v1/models');
 
 let token;
 let userId;
+let testEmail = 'admin@example.com';
+let testPassword = 'p@ssw0rd';
 
 beforeAll(async () => {
     const res = await request(server)
         .post('/api/login')
-        .send({ email: 'admin@example.com', password: 'p@ssw0rd' });
+        .send({ email: testEmail, password: testPassword });
     token = res.body.token;
 });
 
@@ -82,6 +84,35 @@ describe('User API Endpoints', () => {
     
         expect(res.statusCode).toEqual(200);
         expect(res.body).toHaveProperty('message', 'User deleted successfully');
+      });
+
+      it('PUT /api/user/change-password - should update users password', async () => {
+        const newPassword = 'newp@ssw0rd';
+        
+        const passwordBody = {
+          currentPassword: testPassword,
+          newPassword: newPassword,
+        };
+        
+        const res = await request(server)
+          .put(`/api/user/change-password`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(passwordBody);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body).toHaveProperty('message', 'Password updated successfully');
+
+        const passwordRevert = {
+          currentPassword: newPassword,
+          newPassword: testPassword,
+        };
+
+        const resRevert = await request(server)
+          .put(`/api/user/change-password`)
+          .set('Authorization', `Bearer ${token}`)
+          .send(passwordRevert);
+
+        expect(resRevert.statusCode).toEqual(200);
+
       });
 
 });
