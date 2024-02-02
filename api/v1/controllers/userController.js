@@ -139,6 +139,15 @@ const userController = {
 
     },
 
+   /**
+    * Change a user's password.
+    * 
+    * @param {string} currentPassword 
+    * @param {string} newPassword 
+    * @param {number} userId 
+    * @returns {Promise<Object>} - A promise that resolves to an object containing a success message.
+    * @throws {Error} - Throws an error if the password change process fails, such as if the current password is incorrect or a server error occurs.
+    */
     async changePassword(currentPassword, newPassword, userId) {
         try {
             const user = await db.User.findByPk(userId);
@@ -165,6 +174,13 @@ const userController = {
         }
     },
 
+    /**
+     * Deletes a user
+     * @param {number} userIdToDelete 
+     * @param {number} loggedInUserId 
+     * @returns {Promise<Object>} - A promise that resolves to an object containing a success message.
+     * @throws {Error} - Throws an error if the deletion process fails, such as if the user is not found or a server error occurs.
+     */
     async deleteUser(userIdToDelete, loggedInUserId) {
         try {
             // Check if the user trying to delete is not deleting their own account
@@ -188,8 +204,140 @@ const userController = {
             logger.error('Error deleting user: ' + error);
             throw error;
         }
-    }
+    },
 
+    /**
+     * Get a user by ID
+     * @param {number} userId
+     * @returns {Promise<Object>} - A promise that resolves to an object containing the user information.
+     * @throws {Error} - Throws an error if the user is not found or a server error occurs.
+     */
+    async getUser(userId) {
+        try {
+            const user = await db.User.findByPk(userId, {
+                attributes: { exclude: ['passwordHash'] } 
+            });
+
+            if (!user) {
+                logger.warn('User not found: ' + userId);
+                return { message: 'User not found' };
+            }
+
+            return user;
+        } catch (error) {
+            logger.error('Error getting user: ' + error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get all users
+     * @returns {Promise<Array>} - A promise that resolves to an array of user objects.
+     * @throws {Error} - Throws an error if a server error occurs.
+     */
+    async getUsers() {
+        try {
+            const users = await db.User.findAll({
+                attributes: { exclude: ['passwordHash'] } 
+            });
+
+            return users;
+        } catch (error) {
+            logger.error('Error getting all users: ' + error);
+            throw error;
+        }
+    },
+
+    /**
+     * Request a password reset for a user.
+     * @param {string} email 
+     * @returns {Promise<Object>} - A promise that resolves to an object containing a success message.
+     * @throws {Error} - Throws an error if the user is not found or a server error occurs.
+     */
+    async requestPasswordReset(email) {
+        try {
+            const user = await db.User.findOne({ where: { email } });
+            if (!user) {
+                logger.warn('User not found while requesting password reset: ' + email);
+                return { message: 'User not found' };
+            }
+
+            const token = generateUniqueToken();
+            user.resetToken = token;
+            user.resetTokenExpires = new Date(Date.now() + process.env.RESET_TOKEN_EXPIRATION);
+            await user.save();
+
+            sendPasswordResetEmail(email, token);
+            logger.info('Password reset requested for: ' + email);
+            return { message: 'Password reset email sent' };
+        } catch (error) {
+            logger.error('Error requesting password reset: ' + error);
+            throw error;
+        }
+    },
+
+    /**
+     * Reset a user's password using a token.
+     * @param {string} token 
+     * @param {string} newPassword 
+     * @returns {Promise<Object>} - A promise that resolves to an object containing a success message.
+     * @throws {Error} - Throws an error if the token is invalid, the user is not found, or a server error occurs.
+     */
+    async resetPassword(token, newPassword) {
+        try {
+            const isValidToken = validateResetToken(token);
+
+            // Validate token
+            if (!isValidToken) {
+                logger.warn('Invalid or expired reset token: ' + token);
+                return { message: 'Invalid or expired reset token' };
+            }
+
+            // Find the user by the reset token
+            const user = await db.User.findOne({ where: { resetToken: token } });
+
+            if (!user) {
+                logger.warn('User not found while resetting password: ' + token);
+                return { message: 'User not found' };
+            }
+
+            user.passwordHash = bcrypt.hashSync(newPassword, 10);
+            user.resetToken = null;
+            await user.save();
+
+            logger.info('Password reset successfully for: ' + user.email);
+            return { message: 'Password reset successfully' };
+        } catch (error) {
+            logger.error('Error resetting password: ' + error);
+            throw error;
+        }
+    },
+
+    /**
+     * Unlock a user's account.
+     * @param {number} userIdToUnlock 
+     * @returns {Promise<Object>} - A promise that resolves to an object containing a success message.
+     * @throws {Error} - Throws an error if the user is not found or a server error occurs.
+     */
+    async unlockAccount(userIdToUnlock) {
+        try {
+            const user = await db.User.findByPk(userIdToUnlock);
+            if (!user) {
+                logger.warn('User not found while unlocking account: ' + userIdToUnlock);
+                return { message: 'User not found' };
+            }
+
+            user.loginAttempts = 0;
+            user.isLocked = false;
+            await user.save();
+
+            logger.info('User account unlocked successfully: ' + user.email);
+            return { message: 'User account unlocked successfully' };
+        } catch (error) {
+            logger.error('Error unlocking account: ' + error);
+            throw error;
+        }
+    }
 };
 
 module.exports = userController;

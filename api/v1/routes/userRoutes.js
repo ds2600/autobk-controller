@@ -75,30 +75,20 @@ router.delete('/user/:userId', authenticateToken, checkRole('Administrator'), as
 router.get('/user/:userId', authenticateToken, async (req, res) => {
     try {
         const userId = parseInt(req.params.userId);
-        const user = await db.User.findByPk(userId, {
-            attributes: { exclude: ['passwordHash'] } 
-        });
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
+        const user = await userController.getUser(userId);
         res.status(200).json(user);
     } catch (error) {
-        console.error(error);
+        logger.error('Error getting user: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
 
 router.get('/users', authenticateToken, checkRole('Administrator'), async (req, res) => {
     try {
-        const users = await db.User.findAll({
-            attributes: { exclude: ['passwordHash'] } 
-        });
-
+        const users = await userController.getUsers();
         res.status(200).json(users);
     } catch (error) {
-        console.error(error);
+        logger.error('Error getting users: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -106,27 +96,10 @@ router.get('/users', authenticateToken, checkRole('Administrator'), async (req, 
 router.post('/user/reset-password-request', async (req, res) => {
     try {
         const { email } = req.body;
-
-        // Check if the user with the provided email exists
-        const user = await db.User.findOne({ where: { email } });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        // Generate a unique reset token 
-        const resetToken = generateUniqueToken();
-
-        // Store the reset token and its expiration date in the database
-        user.resetToken = resetToken;
-        user.resetTokenExpiresAt = new Date(new Date().getTime() + 3600000); // Token expires in 1 hour
-        await user.save();
-
-        // Send an email to the user with a link containing the resetToken
-        sendPasswordResetEmail(email, resetToken); // Implement this function to send the email
-
-        res.status(200).json({ message: 'Password reset email sent successfully' });
+        const request = await userController.requestPasswordReset(email);
+        res.status(200).json(request);
     } catch (error) {
-        console.error(error);
+        logger.error('Error requesting password reset: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -135,27 +108,10 @@ router.get('/user/reset-password', async (req, res) => {
     try {
         const { token, newPassword } = req.body;
 
-        const isValidToken = validateResetToken(token);
-
-        // Validate token
-        if (!isValidToken) {
-            return res.status(400).json({ error: 'Invalid or expired reset token' });
-        }
-
-        // Find the user by the reset token
-        const user = await db.User.findOne({ where: { resetToken: token } });
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
-        user.passwordhash = bcrypt.hashSync(newPassword, 10);
-        user.resetToken = null;
-        await user.save();
-
-        res.status(200).json({ message: 'Password reset successfully' });
+        const request = await userController.resetPassword(token, newPassword);
+        res.status(200).json(request);
     } catch (error) {
-        console.error(error);
+        logger.error('Error resetting password: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -163,19 +119,10 @@ router.get('/user/reset-password', async (req, res) => {
 router.put('/user/unlock/:userId', authenticateToken, checkRole('Administrator'), async (req, res) => {
     try {
         const userIdToUnlock = parseInt(req.params.userId);
-        const userToUpdate = await db.User.findByPk(userIdToUnlock);
-
-        if (!userToUpdate) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-        
-        userToUpdate.loginAttempts = 0;
-        userToUpdate.isLocked = false;
-        await userToUpdate.save();
-
-        res.status(200).json({ message: 'User account unlocked successfully' });
+        const request = await userController.unlockUser(userIdToUnlock);
+        res.status(200).json(request);
     } catch (error) {
-        console.error(error);
+        logger.error('Error unlocking user: ' + error);
         res.status(500).json({ error: error.message });
     }
 });
