@@ -3,7 +3,6 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../models');
-const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
 const { generateUniqueToken, sendPasswordResetEmail, validateResetToken } = require('../../../utilities/emailUtils');
 const { createLogger } = require('../../../config/logConfig.js')
 const logger = createLogger('userController');

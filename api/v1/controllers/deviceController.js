@@ -3,6 +3,9 @@
 const Sequelize = require('sequelize');
 const { Device, Backup, Schedule } = require('../models');
 const { appConfig } = require('../../../config/appConfig.js');
+const { createLogger } = require('../../../config/logConfig.js')
+const logger = createLogger('deviceController');
+
 
 const deviceController = {
     /**
@@ -52,7 +55,7 @@ const deviceController = {
                 };
             }));
         } catch (error) {
-            console.error(error);
+            logger.error('Error getting device list: ' + error);
             throw error;
         }
     },
@@ -112,7 +115,7 @@ const deviceController = {
 
             return deviceInfo;
         } catch (error) {
-            console.error(error);
+            logger.error('Error getting device info: ' + error);
             throw error;
         }
     },
@@ -140,7 +143,7 @@ const deviceController = {
                 };
             }));
         } catch (error) {
-            console.error(error);
+            logger.error('Error getting backups: ' + error);
             throw error;
         }
     },
@@ -182,6 +185,7 @@ const deviceController = {
             };
 
             const newDevice = await Device.create(newDeviceData);
+            logger.info(`Created new device: ${newDeviceData.sName}`);
             
             if (newDeviceData.sType === 'OneNet') {
                 const logDeviceData = {
@@ -194,6 +198,7 @@ const deviceController = {
                 };
 
                 await Device.create(logDeviceData);
+                logger.info(`Created OneNetLog device for ${newDeviceData.sName}`);
             }
 
             return {
@@ -206,7 +211,7 @@ const deviceController = {
                 autoWeeks: newDevice.iAutoWeeks
             };
         } catch (error) {
-            console.error(error);
+            logger.error('Error adding device: ' + error);
             throw error;
         }
     },
@@ -251,12 +256,13 @@ const deviceController = {
                         sName: `${deviceData.name || device.sName}-Log`,
                         sIP: updateData.ip || device.sIP,
                     };
+                    logger.info(`Updating OneNetLog device: ${logUpdateData.sName}`);
                     await logDevice.update(logUpdateData);
                 }
             }
 
             // TODO: Validate and sanitize input
-
+            logger.info(`Updating device: ${updateData.sName}`);
             await device.update(updateData);
 
             return {
@@ -268,7 +274,7 @@ const deviceController = {
                 autoWeeks: device.iAutoWeeks
             };
         } catch (error) {
-            console.error(error);
+            logger.error('Error updating device: ' + error);
             throw error;
         }
     },
@@ -289,7 +295,7 @@ const deviceController = {
 
             return logId.kSelf;
         } catch (error) {
-            console.error(error);
+            logger.error('Error getting EAS log ID: ' + error);
             throw error;
         }
     },
@@ -302,25 +308,31 @@ const deviceController = {
      */
     async deleteDevice(deviceId) {
         try {
+            logger.info(`Beginning delete device process: ${deviceId}`)
             const device = await Device.findByPk(deviceId);
             if (!device) {
+                logger.warning(`Device not found: ${deviceId}`);
                 throw new Error('Device not found');
             }
 
             // Delete all associated backups
+            logger.info(`Deleting backups for device: ${deviceId}`);
             await Backup.destroy({
                 where: { kDevice: deviceId }
             });
 
             // Delete all associated schedules
+            logger.info(`Deleting schedules for device: ${deviceId}`);
             await Schedule.destroy({
                 where: { kDevice: deviceId }
             });
 
             // Finally, delete the device
+            logger.info(`Deleting device: ${deviceId}`);
             await device.destroy();
+            logger.info(`Device deleted: ${deviceId}`);
         } catch (error) {
-            console.error(error);
+            logger.error('Error deleting device: ' + error); 
             throw error;
         }
     },
