@@ -104,7 +104,7 @@ router.post('/user/reset-password-request', async (req, res) => {
     }
 });
 
-router.get('/user/reset-password', async (req, res) => {
+router.post('/user/reset-password', async (req, res) => {
     try {
         const { token, newPassword } = req.body;
 
