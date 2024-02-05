@@ -5,6 +5,7 @@ const router = express.Router();
 const deviceController = require('../controllers/deviceController');
 const scheduleController = require('../controllers/scheduleController');
 const { authenticateToken, checkRole } = require('../middleware/authMiddleware');
+const appConfig = require('../../../config/appConfig');
 
 router.get('/devices', authenticateToken, checkRole('Basic'), async (req, res) => {
     try {
@@ -27,6 +28,15 @@ router.get('/devices/:id', authenticateToken, checkRole('Basic'), async (req, re
             backups,
             scheduledBackups
         });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get('/device-types', async (req, res) => {
+    try {
+        res.json(appConfig.appConfig.deviceTypes);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });

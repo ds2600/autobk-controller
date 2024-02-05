@@ -2,25 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body, html, #root {
+/* body, html, #root {
   height: 100%;
   margin: 0;
-}
+} */
 
-.top-bar {
-  background-color: #fff;
-  border-bottom: 1px solid #e6e6e6;
-  height: 54px;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sidebar {
-  background-color: #fff;
-  border-right: 1px solid #e6e6e6;
-  height: calc(100% - 54px);
-  width: 240px;
-  padding: 20px;
-}

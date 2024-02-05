@@ -39,7 +39,7 @@ const userController = {
                 await user.save();
                 logger.info('Login successful: ' + email);
 
-                const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: '1h' });
+                const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRATION });
                 return { token, userLevel: user.userLevel};
             } else {
                 user.loginAttempts++;

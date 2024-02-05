@@ -231,11 +231,6 @@ const deviceController = {
                 throw new Error('Device not found');
             }
 
-            // Prevent changing device type
-            if (deviceData.type && deviceData.type !== device.sType) {
-                throw new Error('Cannot change device type');
-            }
-
             // Map API Fields to DB Fields
             const updateData = {};
             if (deviceData.name) updateData.sName = deviceData.name;

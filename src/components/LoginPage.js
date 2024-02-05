@@ -1,12 +1,10 @@
 import React from 'react';
-import Login from './forms/Login';
 
-const LoginPage = () => {
+
+function LoginPage() {
     return (
-        <>
-            <Login />
-        </>
-    );
-};
+        <h1>Login Form</h1>
+    )
+}
 
 export default LoginPage;
