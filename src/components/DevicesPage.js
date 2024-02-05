@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button } from 'flowbite-react';
-import { useNavigate } from 'react-router-dom';
 import Loading from './common/Loading';
+import Icon from './common/Icon';
+import DeviceRow from './common/DeviceRow';
+import { toast } from 'react-toastify';
 
 function DevicesPage() {
     const [devices, setDevices] = useState([]);
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInVzZXJMZXZlbCI6IkFkbWluaXN0cmF0b3IiLCJpYXQiOjE3MDcwODI3NDUsImV4cCI6MTcwNzY4NzU0NX0.TSb3oMBWxA5tEYi_tnO5VqMopbeMTpUC6fHxMZYE4iU';
@@ -20,21 +20,18 @@ function DevicesPage() {
         axios.get(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/devices`, config)
           .then(response => {
             setDevices(response.data)
+            
             setTimeout(() => {
                 setLoading(false);
             }, 1000);
           })
           .catch(error => {
-            console.error(error)
+            toast.error(error);
             setTimeout(() => {
                 setLoading(false);
             }, 1000);
           });
     }, []);
-
-    const handleEditClick = (deviceId) => {
-        navigate(`/devices/edit/${deviceId}`);
-    };
 
     if (loading) {
         return <Loading />;
@@ -42,13 +39,11 @@ function DevicesPage() {
 
     return (
         <div className="container w-full mx-auto mt-6 mb-6">
-            <div className="flex flex-row flex-col pb-4">
-            <Button 
-                color="dark" 
-                size="xs" 
-                className="p-2 hover:bg-slate-700">
-                    Add Device
-            </Button>
+            <div className="pb-4">
+            <button className="text-slate-800 hover:text-slate-500 focus:outline-none flex items-center">
+                <Icon name="plus-circle" className="h-6 w-6 fill-current" />
+                <span className="ml-2">Add Device</span>
+            </button>
             </div>
             <div className="flex flex-row flex-col">
                 <div className="overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -79,30 +74,7 @@ function DevicesPage() {
                                 </thead>
                                 <tbody>
                                     {devices.map(device => (
-                                        <tr className="bg-white border-b">
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{device.name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{device.type}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{device.ip}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{device.latestBackup ? new Date(device.latestBackup.completionTime).toLocaleString() : "No latest backup"}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{device.nextSchedule ? new Date(device.nextSchedule.scheduledTime).toLocaleString() : "No scheduled backups"}</td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-wrap items-start gap-2">
-                                                    <Button 
-                                                        onClick={() => handleEditClick(device.deviceId)}
-                                                        color="dark"
-                                                        size="xs"
-                                                        className="p-2 hover:bg-slate-700">
-                                                            Edit
-                                                    </Button>
-                                                    <Button 
-                                                        color="dark" 
-                                                        size="xs" 
-                                                        className="p-2 hover:bg-slate-700">
-                                                            Backup Now
-                                                    </Button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                        <DeviceRow device={device} key={device.deviceId} />
                                     ))}
                                 </tbody>
                             </table>

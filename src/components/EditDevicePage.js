@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Icon from './common/Icon';
 import Loading from './common/Loading';
+import { toast } from 'react-toastify';
 
 function EditDevicePage() {
     const { id } = useParams();
@@ -36,7 +37,9 @@ function EditDevicePage() {
 
         axios.get(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/device-types`)
             .then(response => setDeviceTypes(response.data))
-            .catch(error => console.error(error));
+            .catch(error => {
+                toast.error("Failed to load Device Types: " + error);
+            });
 
         axios.get(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/devices/${deviceId}`, config)
           .then(response => {
@@ -47,7 +50,7 @@ function EditDevicePage() {
             }, 1000);
           })
           .catch(error => {
-            console.error(error)
+            toast.error("Failed to load device");
             setTimeout(() => {
                 setLoading(false);
             }, 1000);
@@ -73,6 +76,22 @@ function EditDevicePage() {
     if (loading) {
         return <Loading loading="true"/>;
     }
+
+    if (!device.deviceInfo) {
+        return (
+            <Alert color="red">
+                <div className="flex items-center">
+                    <Icon name="info" />
+                    <div class="ms-3">
+                        <div className="text-sm font-medium">
+                            Device not found
+                        </div>
+                    </div>
+                </div>
+            </Alert>
+        )
+    }
+
     return (
         <>
             <div className="container max-w-lg mx-auto mt-6 mb-6">
@@ -110,8 +129,8 @@ function EditDevicePage() {
                         <Label htmlFor="type">Device Type</Label>
                     </div>
                     <Select id="type" defaultValue={device.deviceInfo.type}>
-                        {deviceTypes.map(deviceType => (
-                            <option value={deviceType.dbValue}>{deviceType.readableValue}</option>
+                        {deviceTypes.map((deviceType, index) => (
+                            <option key={index} value={deviceType.dbValue}>{deviceType.readableValue}</option>
                         ))}
                     </Select>
                 </div>
