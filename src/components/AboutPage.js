@@ -9,12 +9,12 @@ const AboutPage = () => {
       <h1 className="text-2xl font-semibold mt-5">AutoBk Controller</h1>
       {packageJson.version && <p className="mt-2">Version: {packageJson.version}</p>}
       <a
-        href="https://github.com/your-username/your-repo" // Replace with your GitHub link
+        href="https://github.com/ds2600/autobk-controller" 
         className="mt-5 text-blue-500 hover:text-blue-700"
         target="_blank"
         rel="noopener noreferrer"
       >
-        Visit our GitHub
+        Github
       </a>
     </div>
   );

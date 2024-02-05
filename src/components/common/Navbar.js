@@ -1,5 +1,6 @@
 // components/common/Navbar.js
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from './Icon';
 
 const SiteNavbar = () => {
@@ -31,16 +32,16 @@ const SiteNavbar = () => {
 
             <ul className="flex items-stretch">
                 <li className="flex items-center ">
-                <a href="/devices" className="text-white hover:text-gray-300 px-4 flex items-center">Devices</a>
+                <Link to="/devices" className="text-white hover:text-gray-300 px-4 flex items-center">Devices</Link>
                 </li>
                 <li className="flex items-center ">
-                <a href="#" className="text-white hover:text-gray-300 px-4 flex items-center">Backups</a>
+                <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Backups</Link>
                 </li>
                 <li className="flex items-center ">
-                <a href="#" className="text-white hover:text-gray-300 px-4 flex items-center">Reports</a>
+                <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Reports</Link>
                 </li>
                 <li className="flex items-center ">
-                <a href="/about" className="text-white hover:text-gray-300 px-4 flex items-center">About</a>
+                <Link to="/about" className="text-white hover:text-gray-300 px-4 flex items-center">About</Link>
                 </li>
             </ul>
     
