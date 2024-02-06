@@ -51,16 +51,19 @@ const SiteNavbar = () => {
 
             <ul className="flex items-stretch">
                 <li className="flex items-center ">
-                <Link to="/devices" className="text-white hover:text-gray-300 px-4 flex items-center">Devices</Link>
+                    <Link to="/devices" className="text-white hover:text-gray-300 px-4 flex items-center">Devices</Link>
                 </li>
                 <li className="flex items-center ">
-                <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Backups</Link>
+                    <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Backups</Link>
                 </li>
                 <li className="flex items-center ">
-                <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Reports</Link>
+                    <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Service</Link>
                 </li>
                 <li className="flex items-center ">
-                <Link to="/about" className="text-white hover:text-gray-300 px-4 flex items-center">About</Link>
+                    <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Reports</Link>
+                </li>
+                <li className="flex items-center ">
+                    <Link to="/about" className="text-white hover:text-gray-300 px-4 flex items-center">About</Link>
                 </li>
             </ul>
     

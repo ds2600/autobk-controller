@@ -25,6 +25,9 @@ module.exports = (sequelize) => {
             type: DataTypes.STRING(65),
             allowNull: false
         },
+        backupHash: {
+            type: DataTypes.STRING(64)
+        },
         sComment: {
             type: DataTypes.STRING(128)
         }

@@ -23,6 +23,8 @@ Object.keys(db).forEach(modelName => {
 });
 
 db.Schedule.belongsTo(db.Device, { foreignKey: 'kDevice', as: 'device' });
+db.Backup.belongsTo(db.Device, { foreignKey: 'kDevice', as: 'device' });
+db.BackupVersion.belongsTo(db.Backup, { foreignKey: 'kBackup', as: 'backup' });
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

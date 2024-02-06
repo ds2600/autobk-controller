@@ -27,4 +27,12 @@ node utilities/test_password_hash.js '<password>' '<stored-hash>'
 - **`<password>`**: The password to test. It should be a non-empty string.
 - **`<stored-hash>`**: The stored hash to test against. Ensure to wrap the hash in single quotes or escape $ characters to prevent shell interpretation.
 
+## generate_device_dir.js
+Generates a directory name from a given device ID. The directory name is a 10-digit string, padded with leading zeros if necessary.
+
+### Usage
+```bash
+node generate_device_dir.js '<device-id>'
+```
+- **`<device-id>`**: The device ID to generate the directory name from. 
 
