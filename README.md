@@ -1,11 +1,23 @@
+<p align="center">
+  <img style="max-width: 200px;" src="https://raw.githubusercontent.com/ds2600/autobk-controller/502f67cc043be33e9055c20aada1534605b56a55/public/AutoBk.svg" />
+</p>
+
 # AutoBk Controller
+AutoBk Controller is a web application to manage the [AutoBk](https://github.com/ds2600/autobk-p) service and the backups it creates. Architected to be easily extensible and flexible. 
 
-Completely redesigned from the ground up, because I wanted a project. Made a little more flexible and modern. This is a web GUI for the Python AutoBk project.
+<p align="center">
+    <img style="max-width: 600px;" src="https://github.com/ds2600/autobk-controller/assets/227075/af62f854-5207-4e12-b3a2-71acb5c6e12e" />
+</p>
 
-## Current Projected Features
-- Backend API for extensibility
-- Built in API docs using Swagger
-- Local authentication
+## First Release Features
+- Completely controllable via API
+- Local Authentication
+- Reporting
+- Device and Backup Management
+
+## Roadmap Features
 - LDAP support
-- React based 
-- Enforced semantic versioning
+
+## Documentation
+The docs will be available soon.
+
