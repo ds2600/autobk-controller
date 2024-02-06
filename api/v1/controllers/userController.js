@@ -40,7 +40,7 @@ const userController = {
                 logger.info('Login successful: ' + email);
 
                 const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRATION });
-                return { token, userLevel: user.userLevel};
+                return { token, userLevel: user.userLevel, userEmail: user.email};
             } else {
                 user.loginAttempts++;
                 logger.warn('Invalid password: ' + email);

@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from 'flowbite-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import SkeletonRow from './SkeletonRow';
 
-function DeviceRow({ device }) {
+function DeviceRow({ config, device, updateDevices }) {
     const [allowEdit, setAllowEdit] = useState(false);
+    const [rowLoading, setRowLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -20,7 +23,26 @@ function DeviceRow({ device }) {
     };
 
     const handleBackupNowClick = () => {
-        toast.info("Backup scheduled");
+        setRowLoading(true);
+        const time = new Date();
+    
+        axios.post(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/schedules/${device.deviceId}`, { scheduledTime: time }, config)
+        .then((response) => {
+            updateDevices(true);
+            setTimeout(() => {
+                setRowLoading(false);
+            }, 300);
+            toast.success('Backup scheduled');
+        })
+        .catch((error) => {
+            setRowLoading(false);
+            toast.error('An error occurred while scheduling the backup: ' + error);          
+        });
+        
+    }
+
+    if (rowLoading) {
+        return <SkeletonRow colspan="6" />;
     }
 
     return (

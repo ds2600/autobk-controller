@@ -33,9 +33,11 @@ app.use(cors());
 const deviceRoutes = require('./v1/routes/deviceRoutes');
 const scheduleRoutes = require('./v1/routes/scheduleRoutes');
 const userRoutes = require('./v1/routes/userRoutes');
+const coreRoutes = require('./v1/routes/coreRoutes');
 
 app.use('/api', deviceRoutes);
 app.use('/api', scheduleRoutes);
 app.use('/api', userRoutes);
+app.use('/api', coreRoutes);
 
 module.exports = app;

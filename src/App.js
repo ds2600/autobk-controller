@@ -1,50 +1,108 @@
 // src/App.js
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { AuthProvider, AuthContext } from './contexts/AuthContext';
 
 import './App.css';
 
 import SiteNavbar from './components/common/Navbar';
 
-import IndexPage from './components/IndexPage';
 import LoginPage from './components/LoginPage';
 import DevicesPage from './components/DevicesPage';
+import AddDevicePage from './components/AddDevicePage';
 import EditDevicePage from './components/EditDevicePage';
 import AboutPage from './components/AboutPage';
 import Loading from './components/common/Loading';
 
+function MainLayout({ children }) {
+  return (
+    <>
+      <SiteNavbar />
+      {children}
+    </>
+  )
+}
 
 function App() {
-  // Check authentication status and user level here
-
   return (
-    <Router>
-      <div>
-        <SiteNavbar />
-        <Routes>
-          <Route path="/" element={<IndexPage/>} />
-          <Route path="/login" element={<LoginPage/>} />
-          <Route path="/devices" element={<DevicesPage/>} />
-          <Route path="/devices/edit/:id" element={<EditDevicePage/>} />
-          <Route path="/about" element={<AboutPage/>} />
-          <Route path="/loading" element={<Loading/>} />
-        </Routes>
-        <ToastContainer 
-          position="top-right" 
-          autoClose={5000} 
-          hideProgressBar={false} 
-          newestOnTop={false} 
-          closeOnClick 
-          rtl={false} 
-          pauseOnFocusLoss 
-          pauseOnHover
-          theme='colored'  
-        />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div>
+          <Routes>
+            <Route path="/" element={<Navigate to="/devices" />} />
+            <Route path="/login" element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <Navigate to="/devices" />;
+                  } else {
+                    return <LoginPage />;
+                  }
+                }}
+              </AuthContext.Consumer>
+          } />
+            <Route path="/devices" element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <MainLayout><DevicesPage/></MainLayout>;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+            <Route path="/add-device"  element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <MainLayout><AddDevicePage/></MainLayout>;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+            <Route path="/devices/edit/:id" element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <MainLayout><EditDevicePage/></MainLayout>;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+            <Route path="/about"  element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <MainLayout><AboutPage/></MainLayout>;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+          </Routes>
+          <ToastContainer 
+            position="top-right" 
+            autoClose={5000} 
+            hideProgressBar={false} 
+            newestOnTop={false} 
+            closeOnClick 
+            rtl={false} 
+            pauseOnFocusLoss 
+            pauseOnHover
+            theme='colored'  
+          />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

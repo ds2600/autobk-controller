@@ -24,14 +24,13 @@ router.get('/schedules/:deviceId', authenticateToken, checkRole('Basic'), async 
     }
 });
 
-router.post('/schedules/:deviceId', authenticateToken, checkRole('Basic'), async (req, res) => {
+router.post('/schedules/:deviceId', authenticateToken, async (req, res) => {
     try {
         const deviceId = req.params.deviceId;
-        const scheduledTime = req.body ? req.body.scheduledTime : undefined;
+        const scheduledTime = req.body ? req.body.scheduledTime : new Date();
         const result = await scheduleController.scheduleBackup(deviceId, scheduledTime);
         res.json(result);
     } catch (error) {
-        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });

@@ -1,9 +1,8 @@
-// src/components/EditDevicePage.js
+// src/components/AddDevicePage.js
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { 
     Button,
     Label,
@@ -17,44 +16,25 @@ import Icon from './common/Icon';
 import Loading from './common/Loading';
 import { toast } from 'react-toastify';
 
-function EditDevicePage() {
-    const { id } = useParams();
-    const [device, setDevice] = useState({});
-    const [initialDevice, setInitialDevice] = useState({});
+function AddDevicePage() {
     const [loading, setLoading] = useState(true);
     const [deviceTypes, setDeviceTypes] = useState([]);
     const [alert, setAlert] = useState({active: false, message: ''});
     const [saveButtonDisabled, setSaveButtonDisabled] = useState(true);
     const [changesMade, setChangesMade] = useState(false);
-    const deviceId = id;
     const navigate = useNavigate();
 
     useEffect(() => {
-        const token = localStorage.getItem('jwt');
-        const config = {
-            headers: { Authorization: `Bearer ${token}` }
-        };
-
         axios.get(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/device-types`)
-            .then(response => setDeviceTypes(response.data))
+            .then(response => {
+                setDeviceTypes(response.data)
+                setLoading(false);
+            })
             .catch(error => {
                 toast.error("Failed to load Device Types: " + error);
+                setLoading(false);
             });
 
-        axios.get(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/devices/${deviceId}`, config)
-          .then(response => {
-            setDevice(response.data)
-            setInitialDevice(response.data)
-            setTimeout(() => {
-                setLoading(false);
-            }, 1000);
-          })
-          .catch(error => {
-            toast.error("Failed to load device");
-            setTimeout(() => {
-                setLoading(false);
-            }, 1000);
-          });
     }, []);
 
     function isValidIP(ip) {
@@ -62,41 +42,16 @@ function EditDevicePage() {
         return ipFormat.test(ip);
     }
 
-    function checkIfDataChanged() {
-        if (JSON.stringify(device) !== JSON.stringify(initialDevice)) {
-            setChangesMade(true);
-            setSaveButtonDisabled(false);
-            setAlert({active: true, message: 'Changes have been made', color: 'yellow'})
-        } else {
-            setChangesMade(false);
-            setSaveButtonDisabled(true);
-        }
-    }
 
     if (loading) {
         return <Loading loading="true"/>;
-    }
-
-    if (!device.deviceInfo) {
-        return (
-            <Alert color="red">
-                <div className="flex items-center">
-                    <Icon name="info" />
-                    <div class="ms-3">
-                        <div className="text-sm font-medium">
-                            Device not found
-                        </div>
-                    </div>
-                </div>
-            </Alert>
-        )
     }
 
     return (
         <>
             <div className="container max-w-lg mx-auto mt-6 mb-6">
             <div className="mb-2">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Edit {device.deviceInfo.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Add Device</h1>
             </div>
             { alert.active && (
                 <div id="alert-border-2" className={`mt-6 flex items-center p-4 mb-2 text-${alert.color}-800 border-t-4 border-${alert.color}-300 bg-${alert.color}-50 dark:text-${alert.color}-400 dark:bg-gray-800 dark:border-${alert.color}-800`} role="alert">
@@ -117,18 +72,13 @@ function EditDevicePage() {
                         id="name" 
                         placeholder="Device Name"
                         required 
-                        defaultValue={device.deviceInfo.name}
-                        onChange={(e) => {
-                            setDevice({...device, deviceInfo: {...device.deviceInfo, name: e.target.value}});
-                            checkIfDataChanged();
-                        }}
                     />
                 </div>
                 <div className="max-w-md">
                     <div className="mb-2 pt-2 block">
                         <Label htmlFor="type">Device Type</Label>
                     </div>
-                    <Select id="type" defaultValue={device.deviceInfo.type}>
+                    <Select id="type">
                         {deviceTypes.map((deviceType, index) => (
                             <option key={index} value={deviceType.dbValue}>{deviceType.readableValue}</option>
                         ))}
@@ -144,23 +94,13 @@ function EditDevicePage() {
                         id="mgmtIP" 
                         placeholder="Management IP"
                         required 
-                        defaultValue={device.deviceInfo.ip}
-                        onChange={(e) => {
-                            if (!isValidIP(e.target.value)) {
-                                setAlert({active: true, message: 'Invalid IP address', color: 'red'});
-                                setSaveButtonDisabled(true);
-                            } else {
-                                setAlert({active: false, message: ''});
-                                setSaveButtonDisabled(false);
-                            }
-                        }}
                     />
                 </div>
                 <div className="max-w-md">
                     <div className="mb-2 pt-2 block">
                         <Label htmlFor="autoDay">Backup Day</Label>
                     </div>
-                    <Select id="autoDay" defaultValue={device.deviceInfo.autoDay}>
+                    <Select id="autoDay">
                         <option value="0">Disabled</option>
                         <option value="1">Monday</option>
                         <option value="2">Tuesday</option>
@@ -175,7 +115,7 @@ function EditDevicePage() {
                     <div className="mb-2 pt-2 block">
                         <Label htmlFor="autoHour">Backup Hour</Label>
                     </div>
-                    <Select id="autoHour" defaultValue={device.deviceInfo.autoHour}>
+                    <Select id="autoHour">
                         <option value="0">Midnight</option>
                         <option value="1">1 AM</option>
                         <option value="2">2 AM</option>
@@ -206,7 +146,7 @@ function EditDevicePage() {
                     <div className="mb-2 pt-2 block">
                         <Label htmlFor="autoWeeks">Backup Interval (Weeks)</Label>
                     </div>
-                    <Select id="autoWeeks" defaultValue={device.deviceInfo.autoWeeks}>
+                    <Select id="autoWeeks">
                         <option value="0">Disabled</option>
                         <option value="1">Monday</option>
                         <option value="2">Tuesday</option>
@@ -232,11 +172,6 @@ function EditDevicePage() {
                             Cancel
                         </Button>
                     </div>
-                    <div>
-                        <Button className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg px-5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">
-                            Delete
-                        </Button>
-                    </div>
                 </div>
             </form>
             </div>
@@ -244,4 +179,4 @@ function EditDevicePage() {
     )
 }
 
-export default EditDevicePage;
+export default AddDevicePage;

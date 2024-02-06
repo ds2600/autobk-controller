@@ -1,9 +1,9 @@
 import React from 'react';
-
+import LoginForm from './forms/LoginForm';
 
 function LoginPage() {
     return (
-        <h1>Login Form</h1>
+        <LoginForm/>
     )
 }
 

@@ -1,4 +1,4 @@
-import { BarLoader } from "react-spinners";
+import { BarLoader, MoonLoader, RotateLoader } from "react-spinners";
 
 function Loading({loading}) {
     const color = "#334155";
@@ -7,7 +7,6 @@ function Loading({loading}) {
         <BarLoader
         color={color}
         loading={loading}
-        size={150}
         aria-label="Loading Spinner"
         data-testid="loader"
       />

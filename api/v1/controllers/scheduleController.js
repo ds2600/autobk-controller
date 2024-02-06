@@ -2,6 +2,8 @@
 
 const Sequelize = require('sequelize');
 const { Schedule, Device } = require('../models');
+const { createLogger } = require('../../../config/logConfig.js')
+const logger = createLogger('scheduleController');
 
 /**
  * Retrieves all schedules from the database along with the corresponding device names.
