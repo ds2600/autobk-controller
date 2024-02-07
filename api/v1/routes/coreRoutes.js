@@ -9,8 +9,7 @@ const logger = createLogger('core');
 
 // , authenticateToken, checkRole('Basic')
 router.get('/running', (req, res) => {
-    const prcs = 'autobkservice'; 
-    exec(`ps -ax | grep -i ${prcs} | grep -v grep || true`, (error, stdout, stderr) => {
+    exec(`ps -ax | grep -i ${process.env.REACT_APP_AUTOBK_SERVICE} | grep -v grep || true`, (error, stdout, stderr) => {
         if (error) {
             logger.error(`exec error: ${error}`);
             res.status(500).json({ error: 'An error occurred while checking the process' });
