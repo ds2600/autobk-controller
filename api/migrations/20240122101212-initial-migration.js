@@ -66,7 +66,7 @@ module.exports = {
         allowNull: true
       },
       sFile: {
-        type: Sequelize.STRING(65),
+        type: Sequelize.STRING(128),
         allowNull: false
       },
       sComment: {
