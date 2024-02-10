@@ -16,6 +16,7 @@ const deviceController = {
      */
     async getDeviceList(type = 'all') {
         try {
+            logger.info(`Getting device list`);
             const devices = await Device.findAll({
                 order: [['sName', 'ASC']],
             });
@@ -32,12 +33,12 @@ const deviceController = {
                     order: [['tTime', 'ASC']],
                     limit: 1
                 });
-
                 return {
                     deviceId: device.kSelf,
                     name: device.sName,
                     type: device.sType,
                     ip: device.sIP,
+                    autoDay: device.iAutoDay,
                     latestBackup: latestBackup ? {
                         fileId: latestBackup.kSelf,
                         completionTime: latestBackup.tComplete,
@@ -167,8 +168,8 @@ const deviceController = {
                 throw new Error('Invalid IP address');
             }
 
-            if (deviceData.autoDay < 1 || deviceData.autoDay > 7) {
-                throw new Error('autoDay must be between 1 and 7');
+            if (deviceData.autoDay < 0 || deviceData.autoDay > 7) {
+                throw new Error('autoDay must be between 0 and 7');
             }
 
             if (deviceData.autoHour < 0 || deviceData.autoHour > 24) {

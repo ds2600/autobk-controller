@@ -17,7 +17,7 @@ module.exports = {
         unique: true
       },
       sType: {
-        type: Sequelize.ENUM('APEX', 'FakeDevice', 'DCM', 'CAP', 'Inca1', 'Vista', 'OneNet', 'OneNetLog', 'TC600E', 'CXCHP', 'PSSend', 'Quartet'),
+        type: Sequelize.ENUM('APEX', 'FakeDevice', 'FakeDevicePy', 'DCM', 'CAP', 'Inca1', 'Vista', 'OneNet', 'OneNetLog', 'TC600E', 'CXCHP', 'PSSend', 'Quartet'),
         allowNull: false
       },
       sIP: {

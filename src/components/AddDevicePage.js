@@ -20,10 +20,15 @@ function AddDevicePage() {
     const [loading, setLoading] = useState(true);
     const [deviceTypes, setDeviceTypes] = useState([]);
     const [alert, setAlert] = useState({active: false, message: ''});
-    const [saveButtonDisabled, setSaveButtonDisabled] = useState(true);
-    const [changesMade, setChangesMade] = useState(false);
+    const [saveButtonDisabled, setSaveButtonDisabled] = useState(false);
+    const [changesMade, setChangesMade] = useState(true);
     const navigate = useNavigate();
+    const token = localStorage.getItem('jwt');
 
+    const config = {
+        headers: { Authorization: `Bearer ${token}` }
+    };
+    
     useEffect(() => {
         axios.get(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/device-types`)
             .then(response => {
@@ -42,9 +47,47 @@ function AddDevicePage() {
         return ipFormat.test(ip);
     }
 
+    function handleSave() {
+        const name = document.getElementById('name').value;
+        const type = document.getElementById('type').value;
+        const mgmtIP = document.getElementById('mgmtIP').value;
+        const autoDay = document.getElementById('autoDay').value;
+        const autoHour = document.getElementById('autoHour').value;
+        const autoWeeks = document.getElementById('autoWeeks').value;
+
+        if (!name || !mgmtIP) {
+            setAlert({active: true, message: 'Name and Management IP are required', color: 'red'});
+            return;
+        } else if (!isValidIP(mgmtIP)) {
+            setAlert({active: true, message: 'Invalid Management IP', color: 'red'});
+            return;
+        } else {
+            setAlert({active: false, message: ''});
+        }
+
+        const data = {
+            name: name,
+            type: type,
+            ip: mgmtIP,
+            autoDay: autoDay,
+            autoHour: autoHour,
+            autoWeeks: autoWeeks
+        };
+
+        axios.post(`${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/devices`, data, config)
+            .then(response => {
+                toast.success(`${response.data.name} added successfully`);
+                navigate('/devices');
+            })
+            .catch(error => {
+                toast.error("Failed to add device: " + error);
+            });
+    }
+
+
 
     if (loading) {
-        return <Loading loading="true"/>;
+        return <Loading/>;
     }
 
     return (
@@ -80,7 +123,10 @@ function AddDevicePage() {
                     </div>
                     <Select id="type">
                         {deviceTypes.map((deviceType, index) => (
-                            <option key={index} value={deviceType.dbValue}>{deviceType.readableValue}</option>
+                            deviceType.dbValue !== 'OneNetLog' && (
+                                <option key={index} value={deviceType.dbValue}>{deviceType.readableValue}</option>
+                            )
+                            
                         ))}
                     </Select>
                 </div>
@@ -159,7 +205,8 @@ function AddDevicePage() {
                 </div>
                 <div className="flex justify-between w-full">
                     <div className="flex gap-2">
-                        <Button 
+                        <Button
+                            onClick={handleSave} 
                             className={`focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg px-5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800`}
                             disabled={saveButtonDisabled || !changesMade}
                         >

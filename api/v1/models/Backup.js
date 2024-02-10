@@ -22,7 +22,7 @@ module.exports = (sequelize) => {
             type: DataTypes.DATE
         },
         sFile: {
-            type: DataTypes.STRING(65),
+            type: DataTypes.STRING(128),
             allowNull: false
         },
         backupHash: {

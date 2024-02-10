@@ -16,6 +16,7 @@ import AddDevicePage from './components/AddDevicePage';
 import EditDevicePage from './components/EditDevicePage';
 import AboutPage from './components/AboutPage';
 import Loading from './components/common/Loading';
+import DownloadRoute from './components/DownloadRoute';
 
 function MainLayout({ children }) {
   return (
@@ -71,6 +72,17 @@ function App() {
                 {({ isLoggedIn }) => {
                   if (isLoggedIn) {
                     return <MainLayout><EditDevicePage/></MainLayout>;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+            <Route path="/download/:fileId"  element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <DownloadRoute/>;
                   } else {
                     return <Navigate to="/login" />;
                   }

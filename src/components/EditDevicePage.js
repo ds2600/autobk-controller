@@ -74,7 +74,11 @@ function EditDevicePage() {
     }
 
     if (loading) {
-        return <Loading loading="true"/>;
+        return (
+            <div className="m-10 p-10 flex items-center justify-center ">
+                <Loading loading="true"/>
+            </div>
+        );
     }
 
     if (!device.deviceInfo) {
