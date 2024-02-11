@@ -76,7 +76,7 @@ const reportController = {
     report += '\n## Failed Backups\n';
 
     if (failedSchedules.length === 0) {
-      report += '\n**No failed backups during this period**\n';
+      report += '**No failed backups during this period**\n';
     } else {
       failedSchedules.forEach(schedule => {
         report += `- **Device**: ${schedule.device.sName ? schedule.device.sName : 'N/A'}\n`;

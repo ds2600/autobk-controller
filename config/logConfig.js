@@ -1,4 +1,5 @@
 const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
 
 const fs = require('fs');
 const dir = './logs';
@@ -13,6 +14,14 @@ const syslogFormat = winston.format.printf(({ level, message, timestamp, moduleN
 });
 
 const createLogger = (moduleName) => {
+    const transport = new DailyRotateFile({
+        filename: `${dir}/controller-%DATE%.log`,
+        datePattern: 'YYYY-MM-DD',
+        zippedArchive: true,
+        maxSize: '20m',
+        maxFiles: '14d'
+    });
+    
     return winston.createLogger({
         level: 'info',
         format: winston.format.combine(
@@ -26,8 +35,7 @@ const createLogger = (moduleName) => {
             syslogFormat
         ),
         transports: [
-            new winston.transports.File({ filename: './logs/error.log', level: 'error' }),
-            new winston.transports.File({ filename: './logs/combined.log' })
+            transport,
         ],
     });
 };
