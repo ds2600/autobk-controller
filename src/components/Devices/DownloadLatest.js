@@ -9,12 +9,16 @@ const formatDate = (dateString) => {
 };
 
 const useDownload = () => {
+
+    const token = localStorage.getItem('jwt');
+
     const downloadFile = async (fileId) => {
       try {
         const response = await axios({
           url: `${process.env.REACT_APP_API_URL}:${process.env.REACT_APP_API_PORT}/api/download/${fileId}`,
           method: 'GET',
-          responseType: 'blob', // Important
+          responseType: 'blob',
+          headers: { Authorization: `Bearer ${token}` }
         });
   
         const url = window.URL.createObjectURL(new Blob([response.data]));
