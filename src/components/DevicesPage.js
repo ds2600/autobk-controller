@@ -27,7 +27,7 @@ function DevicesPage() {
             
             setTimeout(() => {
                 setLoading(false);
-            }, 500);
+            }, 100);
           })
           .catch(error => {
             toast.error(error);

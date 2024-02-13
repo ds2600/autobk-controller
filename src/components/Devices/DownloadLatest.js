@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import Time from "../common/Time";
 
 const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -50,7 +51,7 @@ const DownloadLatest = ({latest})  => {
         navigate(`/download/${fileId}`);
     }
     return (
-        <Link className="text-blue-500 hover:text-blue-700" onClick={() => downloadFile(latest.fileId)}>{formatDate(latest.completionTime)}</Link>
+        <Link className="text-blue-500 hover:text-blue-700" onClick={() => downloadFile(latest.fileId)}><Time time={latest.completionTime} /></Link>
     )
 
 }

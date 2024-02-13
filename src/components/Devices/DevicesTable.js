@@ -6,6 +6,8 @@ import 'react-data-table-component-extensions/dist/index.css';
 import Loading from "../common/Loading";
 import DownloadLatest from "./DownloadLatest";
 import ActionsCell from "./ActionsCell";
+import { Link } from "react-router-dom";
+import Time from "../common/Time";
 
 const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -24,11 +26,10 @@ function EmptyTable() {
 }
 
 const DevicesTable = ({ refresh, loading, devices, ...props }) => {
-    
     const columns = [
         {
             name: "Name",
-            selector: row => row.name,
+            selector: row => <Link className="text-blue-500 hover:text-blue-700" to={`/devices/${row.deviceId}`}>{row.name}</Link>,
             sortable: true
         },
         {
@@ -49,7 +50,7 @@ const DevicesTable = ({ refresh, loading, devices, ...props }) => {
         },
         {
             name: "Next Backup",
-            selector: row => row.nextSchedule ? formatDate(row.nextSchedule.scheduledTime) : row.autoDay === 0 ? 'Not scheduled' : 'Will be scheduled',
+            selector: row => row.nextSchedule ? <Time time={row.nextSchedule.scheduledTime} /> : row.autoDay === 0 ? 'Not scheduled' : 'Will be scheduled',
             sortable: true
         },
         {

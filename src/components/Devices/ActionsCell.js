@@ -26,7 +26,7 @@ const ActionsCell = ({ refresh, deviceId }) => {
 
     return (
         <div className="flex items-center space-x-2">
-            <Link to={`/devices/edit/${deviceId}`} className="inline-block text-blue-500 hover:text-blue-700">
+            <Link to={`/devices/${deviceId}/edit`} className="inline-block text-blue-500 hover:text-blue-700">
                 <Icon name="edit" className="h-4 w-4" title="Edit"/>
             </Link>
             <Link onClick={() => handleBackupNowClick()} className="inline-block text-blue-500 hover:text-blue-700">

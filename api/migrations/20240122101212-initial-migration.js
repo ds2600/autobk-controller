@@ -134,7 +134,17 @@ module.exports = {
       userLevel: {
         type: Sequelize.ENUM('Administrator', 'User', 'Basic'),
         allowNull: false
-      }
+      },
+      username: {
+        type: Sequelize.STRING(45),
+        allowNull: false,
+        unique: true
+      },
+      timezone: {
+        type: Sequelize.STRING(45),
+        allowNull: false,
+        defaultValue: 'America/New_York'
+      },
     });
   },
 

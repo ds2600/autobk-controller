@@ -18,17 +18,23 @@ export const AuthProvider = ({ children }) => {
     return localStorage.getItem('userEmail');
   });
 
+  const [userTimezone, setUserTimezone] = React.useState(() => {
+    return localStorage.getItem('userTimezone');
+  });
+
   const logout = () => {
     localStorage.removeItem('jwt');
     localStorage.removeItem('userLevel');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('userTimezone');
     setIsLoggedIn(false);
     setUserLevel(null);
     setUserEmail(null);
+    setUserTimezone(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, userLevel, setUserLevel, userEmail, setUserEmail, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, setIsLoggedIn, userLevel, setUserLevel, userEmail, setUserEmail, userTimezone, setUserTimezone, logout }}>
       {children}
     </AuthContext.Provider>
   );

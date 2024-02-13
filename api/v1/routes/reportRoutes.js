@@ -11,4 +11,12 @@ router.get('/report', authenticateToken, async (req, res) => {
     reportController.getReport(req, res);
 });
 
+router.get('/reports', async (req, res) => {
+    reportController.getReportFiles(req, res);
+});
+
+router.get('/reports/:file', async (req, res) => {
+    reportController.getFileContents(req, res);
+});
+
 module.exports = router;

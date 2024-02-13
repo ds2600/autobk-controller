@@ -28,4 +28,10 @@ router.get('/running', (req, res) => {
     });
 });
 
+router.get('/server-time', (req, res) => {
+    const date = new Date();
+    const time = `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`;
+    res.json({ time });
+});
+
 module.exports = router;

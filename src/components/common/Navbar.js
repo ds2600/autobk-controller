@@ -60,7 +60,7 @@ const SiteNavbar = () => {
                     <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Service</Link>
                 </li>
                 <li className="flex items-center ">
-                    <Link to="#" className="text-white hover:text-gray-300 px-4 flex items-center">Reports</Link>
+                    <Link to="/reports" className="text-white hover:text-gray-300 px-4 flex items-center">Reports</Link>
                 </li>
                 <li className="flex items-center ">
                     <Link to="/about" className="text-white hover:text-gray-300 px-4 flex items-center">About</Link>

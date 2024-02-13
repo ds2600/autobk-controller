@@ -79,8 +79,8 @@ cron.schedule(cronExpression, () => {
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     // Format the dates as strings in the format 'YYYY-MM-DD'
-    const end = now.toISOString();
-    const start = yesterday.toISOString();
+    const end = now.toISOString().slice(0, -5) + 'Z';
+    const start = yesterday.toISOString().slice(0, -5) + 'Z';
     // Create mock request and response objects
     const req = {
         query: {

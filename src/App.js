@@ -17,12 +17,16 @@ import EditDevicePage from './components/EditDevicePage';
 import AboutPage from './components/AboutPage';
 import Loading from './components/common/Loading';
 import DownloadRoute from './components/DownloadRoute';
+import DevicePage from './components/DevicePage';
+import ReportPage from './components/ReportPage';
+import TimeDisplay from './components/common/TimeDisplay';
 
 function MainLayout({ children }) {
   return (
     <>
       <SiteNavbar />
       {children}
+      <TimeDisplay />
     </>
   )
 }
@@ -67,7 +71,7 @@ function App() {
                 }}
               </AuthContext.Consumer>
             }/>
-            <Route path="/devices/edit/:id" element={
+            <Route path="/devices/:id/edit" element={
               <AuthContext.Consumer>
                 {({ isLoggedIn }) => {
                   if (isLoggedIn) {
@@ -83,6 +87,28 @@ function App() {
                 {({ isLoggedIn }) => {
                   if (isLoggedIn) {
                     return <DownloadRoute/>;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+            <Route path="/devices/:deviceId"  element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <MainLayout><DevicePage/></MainLayout>;;
+                  } else {
+                    return <Navigate to="/login" />;
+                  }
+                }}
+              </AuthContext.Consumer>
+            }/>
+            <Route path="/reports"  element={
+              <AuthContext.Consumer>
+                {({ isLoggedIn }) => {
+                  if (isLoggedIn) {
+                    return <MainLayout><ReportPage/></MainLayout>;;
                   } else {
                     return <Navigate to="/login" />;
                   }

@@ -205,19 +205,17 @@ function AddDevicePage() {
                 </div>
                 <div className="flex justify-between w-full">
                     <div className="flex gap-2">
-                        <Button
-                            onClick={handleSave} 
-                            className={`focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg px-5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800`}
-                            disabled={saveButtonDisabled || !changesMade}
-                        >
+                        <button 
+                            onClick={() => handleSave() } 
+                            className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded m-2">
                             Save
-                        </Button>
-                        <Button 
-                            className="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg px-5 me-2 mb-2 dark:focus:ring-yellow-900"
+                        </button>
+
+                        <button
                             onClick={() => navigate('/devices')}
-                        >
+                            className="bg-yellow-400 hover:bg-yellow-600 text-white py-2 px-4 rounded m-2">
                             Cancel
-                        </Button>
+                        </button>
                     </div>
                 </div>
             </form>

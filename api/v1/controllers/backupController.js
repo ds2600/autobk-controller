@@ -20,6 +20,7 @@ const backupController = {
             const backup = await Backup.findByPk(fileId);
 
             if (!backup) {
+                logger.error(`Backup ${fileId} not found`);
                 throw new Error('File not found');
             }
         

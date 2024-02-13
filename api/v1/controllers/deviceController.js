@@ -1,7 +1,7 @@
 // api/v1/controllers/deviceController.js
 
 const Sequelize = require('sequelize');
-const { Device, Backup, Schedule } = require('../models');
+const { Device, Backup, Schedule, BackupVersion } = require('../models');
 const { appConfig } = require('../../../config/appConfig.js');
 const { createLogger } = require('../../../config/logConfig.js')
 const logger = createLogger('deviceController');
@@ -69,9 +69,11 @@ const deviceController = {
      */
     async getDeviceInfo(deviceId) {
         try {
+            logger.info(`Getting device info: ${deviceId}`);
             const device = await Device.findByPk(deviceId);
 
             if (!device) {
+                logger.error(`Device not found: ${deviceId}`);
                 throw new Error('Device not found');
             }
 
@@ -85,8 +87,9 @@ const deviceController = {
                 autoWeeks: device.iAutoWeeks
             };
 
-            // If the device type is OneNet, find and add its OneNetLog device
+            // If the device type is OneNet, find and get its OneNetLog device
             if (device.sType === 'OneNet') {
+                logger.info(`Getting OneNetLog device for ${device.sName}`);
                 const logDevice = await Device.findOne({
                     where: { sName: `${device.sName}-Log`, sType: 'OneNetLog' }
                 });
@@ -99,8 +102,9 @@ const deviceController = {
                 }
             }
 
-            // If device is OneNetLog, add its parent OneNet device info
+            // If device is OneNetLog, get its parent OneNet device info
             if (device.sType === 'OneNetLog') {
+                logger.info(`Getting parent OneNet device for ${device.sName}`);
                 const parentDeviceName = device.sName.replace("-Log", "");
                 const parentDevice = await Device.findOne({
                     where: { sName: parentDeviceName, sType: 'OneNet' }
@@ -129,6 +133,7 @@ const deviceController = {
      */
     async getAllBackups(deviceId) {
         try {
+            logger.info(`Getting all backups for device: ${deviceId}`);
             const backups = await Backup.findAll({
                 where: { kDevice: deviceId },
                 order: [['tComplete', 'DESC']]
@@ -158,7 +163,7 @@ const deviceController = {
      */
     async addDevice(deviceData) {
         try {
-
+            logger.info(`Adding new device: ${deviceData.name}`);
             const validTypes = appConfig.deviceTypes.map(type => type.dbValue);
             if (!validTypes.includes(deviceData.type)) {
                 throw new Error('Invalid device type');
@@ -229,6 +234,7 @@ const deviceController = {
         try {
             const device = await Device.findByPk(deviceId);
             if (!device) {
+                logger.error(`Device not found: ${deviceId}`);
                 throw new Error('Device not found');
             }
 
@@ -243,6 +249,7 @@ const deviceController = {
 
             // If the device is a OneNet device, update its OneNetLog device
             if (device.sType === 'OneNet') {
+                logger.info(`Updating corresponding OneNetLog device: ${updateData.sName}`);
                 const logDevice = await Device.findOne({
                     where: { sName: `${device.sName}-Log`, sType: 'OneNetLog' }
                 });
@@ -310,6 +317,12 @@ const deviceController = {
                 logger.warning(`Device not found: ${deviceId}`);
                 throw new Error('Device not found');
             }
+
+            // Delete all associated backup versions
+            logger.info(`Deleting backup versions for device: ${deviceId}`);
+            await BackupVersion.destroy({
+                where: { kDevice: deviceId }
+            });
 
             // Delete all associated backups
             logger.info(`Deleting backups for device: ${deviceId}`);

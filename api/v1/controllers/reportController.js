@@ -9,6 +9,45 @@ const logger = createLogger('reportController');
 const moment = require('moment-timezone');
 
 const reportController = {
+  getReportFiles: async function(req, res) {
+    try {
+      const dir = process.env.REACT_APP_AUTOBK_REPORTS_DIR;
+      const fileNames = fs.readdirSync(dir);
+
+      const fileDetails = fileNames.map(file => {
+        const stats = fs.statSync(path.join(dir, file));
+        return {
+          name: file,
+          mtime: stats.mtime
+        };
+      });
+
+      fileDetails.sort((a, b) => b.mtime - a.mtime);
+      res.json(fileDetails);
+    } catch (error) {
+      logger.error(error);
+      res.status(500).send('An error occurred while reading the reports directory');
+    }
+  },
+
+  getFileContents: async function(req, res) {
+    try {
+      const fileName = req.params.file;
+      const dir = process.env.REACT_APP_AUTOBK_REPORTS_DIR;
+      const filePath = path.join(dir, fileName);
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).send('File not found');
+      }
+
+      const fileContents = fs.readFileSync(filePath, 'utf8');
+      res.send(fileContents);
+    } catch (error) {
+      logger.error(error);
+      res.status(500).send('An error occurred while reading the file');
+    }
+  },
+
   generateRandomString: function(length) {
     let result = '';
     const characters =

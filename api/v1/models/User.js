@@ -11,6 +11,8 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         email: DataTypes.STRING,
+        username: DataTypes.STRING,
+        timezone: DataTypes.STRING,
         passwordHash: DataTypes.STRING,
         isDailyReportEnabled: DataTypes.BOOLEAN,
         userLevel: DataTypes.ENUM(...userLevels),

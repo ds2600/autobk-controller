@@ -5,7 +5,7 @@ import { AuthContext } from '../../contexts/AuthContext';
 import { BarLoader } from 'react-spinners';
 
 const LoginForm = () => {
-    const { setIsLoggedIn, setUserLevel, setUserEmail } = useContext(AuthContext);
+    const { setIsLoggedIn, setUserLevel, setUserEmail, setUserTimezone } = useContext(AuthContext);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -26,15 +26,17 @@ const LoginForm = () => {
                 setLoading(false);
                 toast.error("Login failed. Please check your email and password.");
             } else {
-                const { token, userLevel, userEmail } = await response.json();
+                const { token, userLevel, userEmail, userTimezone } = await response.json();
 
                 localStorage.setItem('jwt', token);
                 localStorage.setItem('userLevel', userLevel);
                 localStorage.setItem('userEmail', userEmail);
+                localStorage.setItem('userTimezone', userTimezone);
 
                 setIsLoggedIn(true);
                 setUserLevel(userLevel);
                 setUserEmail(userEmail);
+                setUserTimezone(userTimezone);
                 setLoading(false);
                 toast.success("Login successful.");
                 <Navigate to="/login" />

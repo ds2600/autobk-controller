@@ -39,8 +39,8 @@ const userController = {
                 await user.save();
                 logger.info('Login successful: ' + email);
 
-                const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRATION });
-                return { token, userLevel: user.userLevel, userEmail: user.email};
+                const token = jwt.sign({ userId: user.kSelf, userLevel: user.userLevel, username: user.username, timezone: user.timezone }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRATION });
+                return { token, userLevel: user.userLevel, userEmail: user.email, username: user.username, userTimezone: user.timezone};
             } else {
                 user.loginAttempts++;
                 logger.warn('Invalid password: ' + email);
@@ -62,6 +62,7 @@ const userController = {
     /**
      * Registers a new user with an email, password, and user level.
      * Hashes the user's password before storing it in the database.
+     * @param {string} username - The username of the new user. 
      * @param {string} email - The email of the new user.
      * @param {string} password - The password of the new user.
      * @param {string} userLevel - The level or role of the new user.
@@ -76,15 +77,16 @@ const userController = {
             const passwordHash = bcrypt.hashSync(password, salt);
 
             const newUser = await db.User.create({
+                username,
                 email,
                 passwordHash,
                 userLevel
             });
-            logger.info('Administrator created a new user account: ' + email);
+            logger.info('Administrator created a new user account: ' + username);
             return { message: 'User created successfully', userId: newUser.kSelf };
         } catch (error) {
             if (error.name === 'SequelizeUniqueConstraintError') {
-                logger.error('Attempt to create user with duplicate email: ' + email);
+                logger.error('Attempt to create duplicate user: ' + email);
             } else {
                 logger.error('Error creating user: ' + error);
             }
