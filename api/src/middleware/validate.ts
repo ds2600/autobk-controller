@@ -16,7 +16,7 @@ export function validate(schema: any) {
 }
 
 export function validateQuery(schema: any) {
-    return (req, _res, next) => {
+    return (req: Request, _res: Response, next: NextFunction) => {
         try {
             req.query = schema.parse(req.query);
             next();

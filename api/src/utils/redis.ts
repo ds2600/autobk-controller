@@ -5,10 +5,13 @@
 import Redis from "ioredis";
 import { env } from "../config/env";
 
-let client: Redis | null = null;
+export type RedisClient = Redis;
 
-export function getRedis() {
+let client: RedisClient | null = null;
+
+export function getRedis(): RedisClient | null {
     if (!env.REDIS_ENABLE) return null;
+    if (!env.REDIS_URL) return null;
     if (!client) { 
         client = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 2 });
     }
