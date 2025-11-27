@@ -38,14 +38,7 @@ const apiVersion = API_VERSION;
 // Core Middleware
 // ------------------------------------------------------------
 app.use(express.json());
-app.use(cors({
-        origin: [
-            'http://localhost:8000',
-            'http://127.0.0.1:8000',
-        ],
-        credentials: true,
-    }
-));
+app.use(cors());
 app.use(helmet());
 app.use(requestId); // Inject requestId per request
 app.use(requestLogger); // Log each request
