@@ -11,6 +11,7 @@ import { openapiSpec } from "./swagger/openapi";
 
 // Routers
 import infoRouter from "./modules/info/info.router";
+import healthRouter from "./modules/health/health.router";
 import authRouter from "./modules/auth/auth.router";
 import usersRouter from "./modules/users/users.router";
 import devicesRouter from "./modules/devices/devices.router";
@@ -54,6 +55,7 @@ app.use(requestLogger); // Log each request
 // ------------------------------------------------------------
 app.use("/v1/info", infoRouter);
 app.use("/v1/cache", cacheRouter); 
+app.use("/health", healthRouter);
 
 
 // ------------------------------------------------------------
