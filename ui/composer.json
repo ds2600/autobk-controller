@@ -1,0 +1,19 @@
+{
+    "name": "ds2600/autobk-controller",
+    "require": {
+        "firebase/php-jwt": "^6.11",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Ds2600\\AutobkController\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ds2600",
+            "email": "bill@ishiganto.com"
+        }
+    ]
+}

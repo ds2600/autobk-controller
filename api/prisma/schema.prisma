@@ -1,0 +1,134 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Device {
+  kSelf      Int        @id @default(autoincrement())
+  sName      String     @db.VarChar(45)
+  sType      DeviceType
+  sIP        String     @db.VarChar(16)
+  iAutoDay   Int
+  iAutoHour  Int
+  iAutoWeeks Int
+
+  Backups   Backup[]
+  Schedules Schedule[]
+
+  @@map("Device")
+}
+
+enum DeviceType {
+  APEX
+  DCM
+  CAP
+  Inca1
+  Vista
+  OneNet
+  OneNetLog
+  TC600E
+  CXCHP
+  PSSend
+  Quartet
+  Inca2
+}
+
+model Backup {
+  kSelf     Int       @id @default(autoincrement())
+  kDevice   Int
+  tComplete DateTime
+  tExpires  DateTime?
+  sFile     String    @db.VarChar(65)
+  sComment  String?   @db.VarChar(128)
+
+  Device Device @relation(fields: [kDevice], references: [kSelf])
+
+  @@map("Backup")
+}
+
+model Schedule {
+  kSelf    Int           @id @default(autoincrement())
+  kDevice  Int
+  sState   ScheduleState
+  tTime    DateTime
+  iAttempt Int?
+  sComment String?       @db.VarChar(128)
+
+  Device Device @relation(fields: [kDevice], references: [kSelf])
+
+  @@map("Schedule")
+}
+
+enum ScheduleState {
+  Auto
+  Manual
+  Fail
+  Complete
+}
+
+model User {
+  id                   Int      @id @default(autoincrement())
+  email                String   @unique
+  passwordHash         String
+  displayName          String?
+  role                 UserRole @default(Basic)
+  isActive             Boolean  @default(true)
+  isDailyReportEnabled Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  passwordResetRequired Boolean  @default(false)
+  tokenVersion         Int      @default(0)
+
+  AuditLogs      AuditLog[]
+  Settings       AppSetting[]
+  PasswordResets PasswordReset[] 
+}
+
+enum UserRole {
+  Administrator
+  User
+  Basic
+}
+
+model PasswordReset {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  User User @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  actorUserId  Int?
+  action       String
+  resourceType String
+  resourceId   String
+  before       Json?
+  after        Json?
+  ip           String?
+  userAgent    String?
+  requestId    String?
+  createdAt    DateTime @default(now())
+
+  User User? @relation(fields: [actorUserId], references: [id])
+}
+
+model AppSetting {
+  key       String   @id
+  value     String?
+  updatedAt DateTime @default(now())
+  updatedBy Int?
+
+  User User? @relation(fields: [updatedBy], references: [id])
+}
+

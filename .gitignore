@@ -1,0 +1,32 @@
+# OS/editor junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -------------------------
+# API 
+# -------------------------
+/api/node_modules/
+/api/dist/
+/api/build/
+/api/.env
+/api/*.tsbuildinfo
+
+# -------------------------
+# UI 
+# -------------------------
+/ui/vendor/
+/ui/cache/
+/ui/.env
+
+todo.txt
