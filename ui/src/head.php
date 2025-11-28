@@ -35,7 +35,7 @@
     </script>
 <script>
     window.APP_CONFIG = {
-        apiBase: '<?= htmlspecialchars($_ENV['API_BASE'] ?? '/api', ENT_QUOTES) ?>',
+        apiBrowserBase: '<?= htmlspecialchars($_ENV['API_BROWSER_BASE'] ?? '/api', ENT_QUOTES) ?>',
     };
 </script>
     <style>

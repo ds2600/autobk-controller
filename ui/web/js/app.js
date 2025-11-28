@@ -56,12 +56,12 @@ document.addEventListener('alpine:init', () => {
     };
 });
 
-const API_BASE = window.APP_CONFIG?.apiBase || '/api';
+const API_BROWSER_BASE = window.APP_CONFIG?.apiBrowserBase || '/api';
 
 async function api(path, opts = {}) {
     if (window.Alpine?.store) Alpine.store('load')?.on();
     try {
-        const res = await fetch(API_BASE + 'v1/' + path, {
+        const res = await fetch(API_BROWSER_BASE + 'v1/' + path, {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json', ...(opts.headers||{}) },
             ...opts,

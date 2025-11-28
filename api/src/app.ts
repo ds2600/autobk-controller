@@ -30,6 +30,19 @@ process.on("unhandledRejection", (reason, promise) => {
     });
 });
 
+const allowedOrigins = (env.CORS_ORIGINS ?? "")
+    .split(",")
+    .map((o: string) => o.trim())
+    .filter((o: string) => o.length > 0);
+
+if (allowedOrigins.length === 0) {
+    allowedOrigins.push(
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    );
+}
+
+
 const app = express();
 
 const apiVersion = API_VERSION;
@@ -38,7 +51,17 @@ const apiVersion = API_VERSION;
 // Core Middleware
 // ------------------------------------------------------------
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+        origin(origin, callback) {
+            if (!origin) return callback(null,true);
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error("CORS policy violation"));
+        },
+        credentials: true,
+    })
+);
 app.use(helmet());
 app.use(requestId); // Inject requestId per request
 app.use(requestLogger); // Log each request
