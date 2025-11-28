@@ -85,7 +85,6 @@ export const usersService = {
     async forcePasswordReset(
         userId: number,
         require: boolean,
-        actorUserId: number | null,
         reqMeta: any
     ) {
         const user = await prisma.user.update({
@@ -95,7 +94,7 @@ export const usersService = {
         });
 
         await writeAuditLog({
-            actorUserId,
+            actorUserId: reqMeta.actorUserId,
             action: "force_password_reset",
             resourceType: "User",
             resourceId: String(userId),

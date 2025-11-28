@@ -3,6 +3,7 @@ require __DIR__ . '/../src/bootstrap.php';
 
 $user = require_auth();
 $isAdmin = isset($user->role) && $user->role === 'Administrator';
+checkForcePasswordReset();
 
 $title = 'My Profile - AutoBk Controller';
 

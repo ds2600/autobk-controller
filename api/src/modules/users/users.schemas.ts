@@ -21,6 +21,7 @@ export const updateUserSchema = z.object({
     role: z.enum([ROLES.ADMIN, ROLES.USER, ROLES.BASIC]).optional(),
     isActive: z.boolean().optional(),
     isDailyReportEnabled: z.boolean().optional(),
+    passwordResetRequired: z.boolean().optional(),
 });
 
 export const forcePasswordResetSchema = z.object({
