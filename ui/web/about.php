@@ -12,6 +12,7 @@ $title = 'About AutoBk Controller';
 
 $user = require_auth();
 $isAdmin = isset($user->role) && $user->role === 'Administrator';
+checkForcePasswordReset();
 
 include __DIR__ . '/../src/head.php';
 

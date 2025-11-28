@@ -1,6 +1,7 @@
 <?php
 // composer require firebase/php-jwt
 
+session_start();
 require_once __DIR__ . '/utils/constants.php';
 require __DIR__ . '/../vendor/autoload.php';
 use Firebase\JWT\JWT;
@@ -38,6 +39,14 @@ function require_auth() {
           'samesite' => 'Lax',
         ]);
         header('Location: /login.php');
+        exit;
+    }
+}
+
+function checkForcePasswordReset() {
+    $user = $_SESSION['user'] ?? null;
+    if ($user && !empty($user['passwordResetRequired']) && $user['passwordResetRequired'] === true) {
+        header('Location: /reset_password.php');
         exit;
     }
 }

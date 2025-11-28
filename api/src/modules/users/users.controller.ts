@@ -94,6 +94,21 @@ export const usersController = {
         res.json(buildSuccess(user, reqMeta.requestId));
     },
 
+    async forcePasswordReset(req: Request, res: Response) {
+        const id = Number(req.params.id);
+        const required: boolean = req.body.required;
+
+        const reqMeta = {
+            actorUserId: (req as any).user?.userId,
+            requestId: (req as any).requestId,
+            ip: req.ip,
+            userAgent: req.headers["user-agent"] || null,
+        };
+
+        const user = await usersService.forcePasswordReset(id, required, reqMeta);
+        res.json(buildSuccess(user, reqMeta.requestId));
+    },
+
     async delete(req: Request, res: Response) {
         const id = Number(req.params.id);
 

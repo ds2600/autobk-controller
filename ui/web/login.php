@@ -1,7 +1,10 @@
 <?php
 require_once __DIR__ . '/../src/bootstrap.php';
 
-session_start();
+if (isset($_GET['resetPassword']) && $_GET['resetPassword'] === 'true') {
+    unset($_COOKIE['autobk_jwt']);
+    unset($_SESSION['user']);
+}
 require_guest();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -43,7 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($code === 200) {
                     $json = json_decode($resp, true);
                     if ($json['success']) {
-                        if (json_last_error() === JSON_ERROR_NONE && !empty($json['data']['token'])) {
+                        if (json_last_error() === JSON_ERROR_NONE && !empty($json['data']['token']) && !empty($json['data']['userData'])) {
+                            $_SESSION['user'] = $json['data']['userData'];
                             $token = $json['data']['token'];
                             setcookie('autobk_jwt', $token, [
                                 'expires' => time() + 3600,

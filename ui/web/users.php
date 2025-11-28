@@ -5,9 +5,10 @@ $user = require_auth();
 $isAdmin = isset($user->role) && $user->role === 'Administrator';
 if (!$isAdmin) {
     http_response_code(403);
-    echo $twig->render('403.html.twig');
+    header('Location: devices.php'); 
     exit;
 }
+checkForcePasswordReset();
 
 $title = 'User Management - AutoBk Controller';
 
@@ -475,6 +476,7 @@ function usersPage() {
             isDailyReportEnabled: false,
             passwordResetRequired: false,
         },
+        forcePasswordReset: false,
         isSavingEdit: false,
         isDeletingEdit: false,
         editError: '',
@@ -630,7 +632,6 @@ function usersPage() {
             if (!this.edit) return;
             this.isSavingEdit = true;
             this.editError = '';
-
             try {
                 const payload = {
                     email: this.edit.email,
@@ -648,7 +649,15 @@ function usersPage() {
 
                 toast.success('User updated');
                 this.showModal = false;
-                this.edit = null;
+                this.edit = {
+                    id: null,
+                    email: '',
+                    displayName: '',
+                    role: 'Basic',
+                    isActive: true,
+                    isDailyReportEnabled: false,
+                    passwordResetRequired: false,
+                }                
                 await this.load();
             } catch (e) {
                 this.editError = e.message || 'Failed to save changes';
@@ -669,7 +678,15 @@ function usersPage() {
                 await api(`users/${u.id}`, { method: 'DELETE' });
                 toast.success('User deleted');
                 this.showModal = false;
-                this.edit = null;
+                this.edit = {
+                    id: null,
+                    email: '',
+                    displayName: '',
+                    role: 'Basic',
+                    isActive: true,
+                    isDailyReportEnabled: false,
+                    passwordResetRequired: false,
+                }                
                 await this.load();
             } catch (e) {
                 this.editError = e.message || 'Failed to delete user';
