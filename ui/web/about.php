@@ -161,8 +161,12 @@ include __DIR__ . '/../src/components/navbar.php';
               <dd class="font-medium text-slate-800" x-text="environment || '—'"></dd>
             </div>
             <div class="py-2 flex justify-between">
-              <dt class="text-slate-500">Uptime</dt>
-              <dd class="font-medium text-slate-800" x-text="humanUptime()"></dd>
+              <dt class="text-slate-500">System Uptime</dt>
+              <dd class="font-medium text-slate-800" x-text="humanUptime(uptime)"></dd>
+            </div>
+            <div class="py-2 flex justify-between">
+              <dt class="text-slate-500">App Uptime</dt>
+              <dd class="font-medium text-slate-800" x-text="humanUptime(appUptime)"></dd>
             </div>
             <div class="py-2 flex justify-between">
               <dt class="text-slate-500">Total memory</dt>
@@ -224,6 +228,7 @@ include __DIR__ . '/../src/components/navbar.php';
         apiVersion: '',
         nodeVersion: '',
         dbVersion: '',
+        appUptime: 0,
         uptime: 0,
         hostname: '',
         platform: '',
@@ -254,6 +259,7 @@ include __DIR__ . '/../src/components/navbar.php';
             this.apiVersion = d.apiVersion || '';
             this.nodeVersion = d.nodeVersion || '';
             this.dbVersion = d.dbVersion || '';
+            this.appUptime = d.appUptime || 0;
             this.uptime = d.uptime || 0;
             this.hostname = d.hostname || '';
             this.platform = (d.platform || '') + '_' + (d.arch || '');
@@ -311,7 +317,7 @@ include __DIR__ . '/../src/components/navbar.php';
 
         usedStorage() {
             if (!this.totalStorage) return 0;
-            const used = this.totalStorage - (this.freeMemory || 0);
+            const used = this.totalStorage - (this.freeStorage || 0);
             return used < 0 ? 0 : used;
         },
 
@@ -344,8 +350,8 @@ include __DIR__ . '/../src/components/navbar.php';
           return `${value.toFixed(1)} ${sizes[i]}`;
         },
 
-        humanUptime() {
-          const s = Math.floor(this.uptime || 0);
+        humanUptime(t) {
+          const s = Math.floor(t || 0);
           if (!s) return '—';
 
           let remaining = s;
