@@ -68,6 +68,8 @@ EXIT;
 ```bash
 sudo mkdir -p /opt/autobk-controller
 sudo chown "$USER":"$USER" /opt/autobk-controller
+sudo chmod -R 755 /opt/autobk-controller
+sudo chmod -R 644 /opt/autobk-controller/ui/web
 cd /opt/autobk-controller
 
 git clone https://github.com/ds2600/autobk-controller.git .
@@ -96,6 +98,7 @@ cp .env.example .env
 ```bash
 cd /opt/autobk-controller/api
 npx prisma migrate deploy
+npx prisma generate
 npm run db:seed -- --create-admin-user
 ```
 
@@ -114,6 +117,11 @@ Production:
 ```bash
 npm run build
 npm start
+```
+
+Background:
+```bash
+nohup npm start > autobk-api.log 2>&1 &
 ```
 
 PM2:
