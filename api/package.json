@@ -10,7 +10,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
-    "job:send-last24-report": "ts-node src/jobs/sendLast24HoursReport.ts"
+    "job:test-last24-report": "ts-node src/jobs/sendLast24HoursReport.ts",
+    "job:send-last24-report": "node dist/jobs/sendLast24HoursReport.js"
+
   },
   "dependencies": {
     "@prisma/client": "latest",
