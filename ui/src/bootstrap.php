@@ -10,7 +10,7 @@ $root = dirname(__DIR__,2);
 $dotenv = Dotenv::createImmutable($root . '/api');
 $dotenv->safeLoad();
 
-$apiBase = $_ENV['API_BASE'] ?? getenv('API_BASE') ?? '';
+$apiInternalBase = $_ENV['API_INTERNAL_BASE'] ?? getenv('API_INTERNAL_BASE') ?? '';
 
 function require_auth() {
     $cookie = $_COOKIE['autobk_jwt'] ?? null;

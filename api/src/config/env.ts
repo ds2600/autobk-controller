@@ -9,6 +9,11 @@ const EnvSchema = z.object({
     PORT: z.coerce.number().default(3000),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
+    API_INTERNAL_BASE: z.string().default("http://localhost:3000"),
+    API_BROWSER_BASE: z.string().default("/api"),
+
+    CORS_ORIGINS: z.string().optional(),
+
     REDIS_ENABLE: z.coerce.boolean().default(false),
     REDIS_URL: z.string().optional(),
     CACHE_TTL_DEVICES_SUMMARY: z.coerce.number().default(300),

@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($payload === false) {
                 $error = 'Server error';
             } else {
-                $ch = curl_init($_ENV['API_BASE'] . 'v1/auth/login');
+                $ch = curl_init($apiInternalBase . 'v1/auth/login');
                 curl_setopt_array($ch, [
                     CURLOPT_POST => true,
                     CURLOPT_HTTPHEADER => [
