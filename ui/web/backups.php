@@ -8,7 +8,7 @@ checkForcePasswordReset();
 if (isset($_GET['download']) && is_numeric($_GET['download'])) {
     $backupId = (int)$_GET['download'];
     
-    $url = rtrim($apiBase, '/') . "/v1/backups/{$backupId}/";
+    $url = rtrim($apiInternalBase, '/') . "/v1/backups/{$backupId}/";
 
     $ch = curl_init($url);
     curl_setopt_array($ch, [
