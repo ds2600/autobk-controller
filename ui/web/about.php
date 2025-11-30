@@ -217,7 +217,7 @@ include __DIR__ . '/../src/components/navbar.php';
     </section>
     <section class="mt-6 text-center">
         <p class="text-xs text-slate-500 mt-4 mx-auto align-center">
-            For issues, feature requests, or contributions, please go to the <a href="https://github.com/ds2600/autobk-controller" target="_blank" class="text-blue-600 underline hover:text-blue-900">AutoBk Controller repository</a>.<br>
+            For issues, feature requests, or contributions, please go to our repository on <a href="https://github.com/ds2600/autobk-controller/issues" target="_blank" class="text-blue-600 underline hover:text-blue-900">Github</a>.<br>
         </p>
     </section>
 <!-- End AutoBk Controller -->
