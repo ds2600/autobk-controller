@@ -192,7 +192,7 @@ if (empty($_SESSION['csrf_token'])) {
 
       <!-- Footer -->
       <p class="mt-6 text-center text-xs text-gray-500">
-          &copy; <?= date('Y') ?> <a href="https://github.com/ds2600/autobk-ctrl" target="_new">AutoBk</a>
+          <a href="https://github.com/ds2600/autobk-controller" target="_new">AutoBk Controller</a>
       </p>
     </div>
   </div>
