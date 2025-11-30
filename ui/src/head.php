@@ -47,7 +47,13 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="./js/app.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
+    <link rel="icon" type="image/png" href="./favicon/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="./favicon/favicon.svg" />
+    <link rel="icon" href="./favicon/favicon.ico" />
+    <link rel="shortcut icon" href="./favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./favicon/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="AutoBk" />
+    <link rel="manifest" href="./favicon/site.webmanifest" />
 </head>
 
-<body class="bg-gray-50" x-data x-init="$store.load = { n:0, on(){this.n++}, off(){this.n=Math.max(0,this.n-1)} }">
+<body class="bg-gray-50 pb-8" x-data x-init="$store.load = { n:0, on(){this.n++}, off(){this.n=Math.max(0,this.n-1)} }">
