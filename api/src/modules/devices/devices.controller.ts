@@ -23,7 +23,7 @@ export const devicesController = {
       const qp = z
         .object({
           page: z.coerce.number().int().min(1).optional(),
-          pageSize: z.coerce.number().int().min(1).max(100).optional(),
+          pageSize: z.coerce.number().int().min(1).max(5000).optional(),
           search: z.string().optional(),
         })
         .parse(req.query);

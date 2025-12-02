@@ -7,6 +7,16 @@ checkForcePasswordReset();
 
 $title = 'Devices - AutoBk Controller';
 
+$additionalHeadContent = <<<HTML
+<!-- DataTables CSS -->
+<link rel="stylesheet" 
+      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- jQuery + DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+HTML;
+
 include __DIR__ . '/../src/head.php';
 include __DIR__ . '/../src/components/navbar.php'; 
 
@@ -102,7 +112,7 @@ include __DIR__ . '/../src/components/navbar.php';
             <h2 class="font-medium">All Devices</h2>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-sm">
+            <table id="devices-table" class="w-full text-sm">
                 <thead class="text-left text-gray-500">
                     <tr>
                     <th class="py-2">Name</th>
@@ -362,7 +372,25 @@ include __DIR__ . '/../src/components/navbar.php';
 
   </main>
 
-    <script>
+<script>
+
+    window.devicesTableOptions = {
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, -1]],
+        order: [[0, 'asc']],
+        columnDefs: [
+            { 
+                orderable: false, 
+                targets: [5]
+            },
+            {
+                targets: [3,4],
+                type: 'date',
+                className: "dt-nowrap",
+            },
+        ],
+    };
+
     function devicesPage(){
         const DOW = [
             { v:0, label: 'None' },
@@ -387,6 +415,7 @@ include __DIR__ . '/../src/components/navbar.php';
             rows: [],
             error: '',
             loading: true,
+            dataTable: null,
             page: 1, pages: 1, pageSize: 25, total: 0,
             pageCache: {},
             showModal: false,
@@ -471,27 +500,6 @@ include __DIR__ . '/../src/components/navbar.php';
                 this.pageCache = {};
             },
 
-            async prefetchNextPage() {
-                const nextPage = this.page + 1;
-                if (nextPage > this.pages) return;
-                if (this.pageCache[nextPage]) return;
-
-                try {
-                    const term = encodeURIComponent(this.searchTerm.trim() || '');
-                    const r = await api(
-                        `devices/summary?page=${nextPage}&pageSize=${this.pageSize}&search=${term}`
-                    );
-
-                    this.pageCache[nextPage] = {
-                        rows: r.data || [],
-                        total: r.meta?.total || 0,
-                        pages: r.meta?.pages || 1,
-                    };
-                } catch (e) {
-                    console.debug('Prefetch failed:', e.message);
-                }
-            },
-
             async create() {
               this.isCreating = true;
               this.createError = '';
@@ -558,47 +566,48 @@ include __DIR__ . '/../src/components/navbar.php';
               const d = new Date(dt);
               return isNaN(d) ? '' : d.toLocaleString();
             },
+            
+            async refresh() {
+                this.clearPageCache();
+                await this.load();
+            },
 
-            async load(){
+            async load() {
                 this.error = '';
                 this.loading = true;
-
-                const cached = this.pageCache[this.page];
-                if (cached) {
-                    setTimeout(() => {
-                        this.rows = cached.rows;
-                        this.total = cached.total;
-                        this.pages = cached.pages;
-                        this.loading = false;
-                        this.prefetchNextPage();
-                    }, 500);
-                    return;
-                }
+                const dt = Date.now();
 
                 try {
-                    this.error = '';
                     const term = encodeURIComponent(this.searchTerm.trim() || '');
-                    const r = await api(`devices/summary?page=${this.page}&pageSize=${this.pageSize}&search=${term}`);  
+                    const r = await api(
+                        `devices/summary?page=1&pageSize=5000&search=${term}&_=${dt}`
+                    );
+
                     const rows = r.data || [];
-                    const total = r.meta?.total || 0;
-                    const pages = r.meta?.pages || 1;
-                    
                     this.rows = rows;
-                    this.total = total;
-                    this.pages = pages;
+                    this.total = rows.length;
+                    this.pages = 1;
+                    this.page = 1;
 
-                    this.pageCache[this.page] = { rows, total, pages };
+                    this.$nextTick(() => {
+                        // Destroy existing DataTable instance if present
+                        if (this.dataTable) {
+                            this.dataTable.destroy();
+                            this.dataTable = null;
+                        }
 
-                    this.prefetchNextPage();
-
-                } catch(e){ 
-//                    this.error = e.message;
+                        // Re-initialize on the fresh DOM
+                        this.dataTable = $('#devices-table').DataTable(
+                            window.devicesTableOptions || {}
+                        );
+                    });
+                } catch (e) {
+                    console.error(e);
                     toast.error(`Failed to load devices: ${e.message}`);
                 } finally {
                     this.loading = false;
                 }
             },
-
             goToPage(p) {
                 const target = Number(p);
                 if (!target || target < 1 || target > this.pages) return;
