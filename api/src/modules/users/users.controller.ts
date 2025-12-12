@@ -1,9 +1,10 @@
 // ------------------------------------------------------------
 // src/modules/users/users.controller.ts
 // ------------------------------------------------------------
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { usersService } from "./users.service";
 import { buildSuccess } from "../../utils/envelope";
+import { createUserSchema } from "./users.schemas";
 
 
 export const usersController = {
@@ -33,7 +34,7 @@ export const usersController = {
         };
 
         const data: any = { email: req.body.email };
-        if (typeof req.body.isDailyRerpotEnabeld === "boolean") {
+        if (typeof req.body.isDailyReportEnabeld === "boolean") {
             data.isDailyReportEnabled = req.body.isDailyRerpotEnabeld;
         }
 
@@ -46,7 +47,7 @@ export const usersController = {
                 email: user.email,
                 displayName: user.displayName,
                 role: user.role,
-                isDailyReportEnabled: user.isDailyReportEnabled,
+                isDailyReportEnabled: false,
               },
               reqMeta.requestId
             )
@@ -68,7 +69,8 @@ export const usersController = {
         res.json(buildSuccess(user, (req as any).requestId));
     },
 
-    async create(req: Request, res: Response) {
+    async create(req: Request, res: Response, next: NextFunction) {
+
         const reqMeta = {
             actorUserId: (req as any).user?.userId,
             requestId: (req as any).requestId,
@@ -76,8 +78,15 @@ export const usersController = {
             userAgent: req.headers["user-agent"] || null,
         };
 
-        const user = await usersService.createUser(req.body, reqMeta);
-        res.json(buildSuccess(user, reqMeta.requestId));
+        try {
+            const body = createUserSchema.parse(req.body);
+            const result = await usersService.createUser(body, reqMeta);
+            res.json(buildSuccess(result, reqMeta.requestId));
+        } catch (err) {
+            next(err);
+        }
+
+
     },
 
     async update(req: Request, res: Response) {

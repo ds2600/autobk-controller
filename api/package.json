@@ -12,7 +12,6 @@
     "prisma:migrate": "prisma migrate deploy",
     "job:test-last24-report": "ts-node src/jobs/sendLast24HoursReport.ts",
     "job:send-last24-report": "node dist/jobs/sendLast24HoursReport.js"
-
   },
   "dependencies": {
     "@prisma/client": "latest",
@@ -40,11 +39,13 @@
     "@types/ini": "^4.1.1",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.11.30",
+    "@types/nodemailer": "^7.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "bcryptjs": "^3.0.3",
     "cookie": "^1.0.2",
     "diskusage": "^1.2.0",
     "ini": "^6.0.0",
+    "nodemailer": "^7.0.11",
     "openapi-types": "^12.1.3",
     "prisma": "latest",
     "ts-node": "^10.9.2",
