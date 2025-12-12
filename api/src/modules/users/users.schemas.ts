@@ -7,11 +7,14 @@ import { ROLES } from "../../config/constants";
 
 export const createUserSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(6),
+    password: z.string().min(6).optional(),
     displayName: z.string().optional(),
     role: z.enum([ROLES.ADMIN, ROLES.USER, ROLES.BASIC]),
-    isActive: z.boolean().optional(),
-    isDailyReportEnabled: z.boolean().optional(),
+    isActive: z.boolean().default(true).optional(),
+    isDailyReportEnabled: z.boolean().default(false).optional(),
+    passwordResetRequired: z.boolean().default(false).optional(),
+    generateTempPassword: z.boolean().default(false).optional(),
+    sendInviteEmail: z.boolean().default(false).optional(),
 });
 
 

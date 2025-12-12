@@ -96,16 +96,29 @@ include __DIR__ . '/../src/components/navbar.php';
                 </label>
             </div>
 
-            <!-- Daily Report -->
+            <!-- Generate temporary password -->
             <div class="flex items-center gap-2 md:col-span-2">
                 <input
-                    id="create-daily"
-                    type="checkbox"
-                    x-model="form.isDailyReportEnabled"
+                    id="create-generate-temp"
+                    type="checkbox" 
+                    x-model="form.generateTempPassword"
                     class="rounded border-gray-300"
                 >
-                <label for="create-daily" class="text-sm text-gray-700">
-                    Enable daily report email
+                <label for="create-generate-temp" class="text-sm text-gray-700">
+                    Generate temporary password
+                </label>
+            </div>
+
+            <!-- Send invite email -->
+            <div class="flex items-center gap-2 md:col-span-2">
+                <input
+                    id="create-send-invite"
+                    type="checkbox"
+                    x-model="form.sendInviteEmail"
+                    class="rounded border-gray-300"
+                >
+                <label for="create-send-invite" class="text-sm text-gray-700">
+                    Send welcome email
                 </label>
             </div>
 
@@ -119,7 +132,8 @@ include __DIR__ . '/../src/components/navbar.php';
                     x-model="form.password"
                     class="border rounded-lg px-3 py-2"
                     placeholder="••••••••"
-                    required
+                    :required="!form.generateTempPassword"
+                    :disabled="form.generateTempPassword"
                 >
             </div>
 
@@ -133,7 +147,8 @@ include __DIR__ . '/../src/components/navbar.php';
                     x-model="form.passwordConfirm"
                     class="border rounded-lg px-3 py-2"
                     placeholder="••••••••"
-                    required
+                    :required="!form.generateTempPassword"
+                    :disabled="form.generateTempPassword"
                 >
             </div>
 
@@ -204,7 +219,6 @@ include __DIR__ . '/../src/components/navbar.php';
                         <th>Display Name</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Daily Report</th>
                         <th>Password Reset</th>
                         <th class="w-48">Actions</th>
                     </tr>
@@ -239,13 +253,6 @@ include __DIR__ . '/../src/components/navbar.php';
                                         class="px-2 py-0.5 rounded-full text-xs"
                                         :class="u.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'"
                                         x-text="u.isActive ? 'Active' : 'Inactive'"
-                                    ></span>
-                                </td>
-                                <td>
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-xs"
-                                        :class="u.isDailyReportEnabled ? 'bg-blue-100 text-blue-800' : 'bg-gray-200 text-gray-700'"
-                                        x-text="u.isDailyReportEnabled ? 'Enabled' : 'Disabled'"
                                     ></span>
                                 </td>
                                 <td>
@@ -492,6 +499,8 @@ function usersPage() {
             password: '',
             passwordConfirm: '',
             passwordResetRequired: false,
+            generateTempPassword: false,
+            sendInviteEmail: false,
         },
 
         toggleCreateForm() {
@@ -517,6 +526,8 @@ function usersPage() {
                 password: '',
                 passwordConfirm: '',
                 passwordResetRequired: false,
+                generateTempPassword: false,
+                sendInviteEmail: false,
             };
         },
 
@@ -568,10 +579,12 @@ function usersPage() {
             this.createError = '';
 
             try {
-                if (!this.form.password || this.form.password !== this.form.passwordConfirm) {
-                    this.createError = 'Passwords do not match.';
-                    this.isCreating = false;
-                    return;
+                if (!this.form.generateTempPassword) {
+                    if (!this.form.password || this.form.password !== this.form.passwordConfirm) {
+                        this.createError = 'Passwords do not match.';
+                        this.isCreating = false;
+                        return;
+                    }
                 }
 
                 const payload = {
@@ -579,10 +592,15 @@ function usersPage() {
                     displayName: this.form.displayName || undefined,
                     role: this.form.role,
                     isActive: this.form.isActive,
-                    isDailyReportEnabled: this.form.isDailyReportEnabled,
-                    password: this.form.password,
+                    isDailyReportEnabled: false,
                     passwordResetRequired: this.form.passwordResetRequired,
+                    generateTempPassword: this.form.generateTempPassword,
+                    sendInviteEmail: this.form.sendInviteEmail,
                 };
+
+                if (!this.form.generateTempPassword) {
+                    payload.password = this.form.password;
+                }
 
                 await api('users', {
                     method: 'POST',
