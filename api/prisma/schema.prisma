@@ -123,6 +123,16 @@ model AuditLog {
   User User? @relation(fields: [actorUserId], references: [id])
 }
 
+model DeviceTombstone {
+  kSelf     Int        @id
+  sName     String     @db.VarChar(45)
+  sType     DeviceType
+  sIP       String     @db.VarChar(16)
+  deletedAt DateTime   @default(now())
+
+  @@map("DeviceTombstone")
+}
+
 model AppSetting {
   key       String   @id
   value     String?

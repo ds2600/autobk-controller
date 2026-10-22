@@ -30,3 +30,11 @@ const agentConfigPath = path.join(
 const agentConfig = ini.parse(fs.readFileSync(agentConfigPath, "utf-8"));
 
 export const BACKUP_HZ = parseInt(agentConfig.Tasks?.AutoBackupsHz || "0", 10);
+
+// EAS report scripts (e.g. usr_autobk_version_OneNet.py) live alongside autobk.ini in the
+// agent checkout, and write their CSV output to the [EAS] Directory the agent's own ini defines.
+export const EAS_ONENET_SCRIPT = path.join(
+    process.env.AGENT_DIR || ".",
+    "usr_autobk_version_OneNet.py"
+);
+export const EAS_OUTPUT_DIR = agentConfig.EAS?.Directory || "";

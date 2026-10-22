@@ -31,6 +31,9 @@ const EnvSchema = z.object({
 
     BACKUP_FILES_DIR: z.string().min(1, "BACKUP_FILES_DIR is required"),
 
+    AGENT_PYTHON: z.string().default("/opt/autobk-agent/venv/bin/python3"),
+    EAS_RUN_TIMEOUT_MS: z.coerce.number().default(600000),
+
     LOG_LEVEL: z.string().default("info"),
 
     ENABLE_SWAGGER: z.coerce.boolean().default(false), 

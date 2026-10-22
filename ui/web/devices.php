@@ -7,24 +7,19 @@ checkForcePasswordReset();
 
 $title = 'Devices - AutoBk Controller';
 
-$additionalHeadContent = <<<HTML
-<!-- DataTables CSS -->
-<link rel="stylesheet" 
-      href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
-<!-- jQuery + DataTables JS -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-HTML;
+$additionalHeadContent = '
+ <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+ <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+ <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+';
 
 include __DIR__ . '/../src/head.php';
 include __DIR__ . '/../src/components/navbar.php'; 
-
-
 ?>
   <main class="max-w-6xl mx-auto p-4" x-data="devicesPage()" x-init="init()">
+  <div x-show="!loading" x-cloak>
 <?php 
-//    include __DIR__ . '/../src/loading.php';
+    include __DIR__ . '/../src/loading.php';
     include __DIR__ . '/../src/components/devices/device_navbar.php';
 ?>
     <!-- Create device -->
@@ -105,14 +100,13 @@ include __DIR__ . '/../src/components/navbar.php';
       </form>
     </section>
 
-
-    <!-- List (READ-ONLY) -->
     <section class="bg-white border rounded-2xl p-4">
         <div class="flex items-center justify-between mb-3">
             <h2 class="font-medium">All Devices</h2>
         </div>
+
         <div class="overflow-x-auto">
-            <table id="devices-table" class="w-full text-sm">
+            <table id="devicesTable" class="w-full text-sm">
                 <thead class="text-left text-gray-500">
                     <tr>
                     <th class="py-2">Name</th>
@@ -124,99 +118,6 @@ include __DIR__ . '/../src/components/navbar.php';
                     </tr>
                 </thead>
                 <tbody id="devrows">
-                    <template x-if="loading">
-                        <template x-for="i in 10" :key="'skeleton-' + i">
-                            <tr class="border-t animate-pulse">
-                                <td class="py-2 pr-2">
-                                    <div class="h-4 bg-gray-200 rounded w-32"></div>
-                                </td>
-                                <td>
-                                    <div class="h-4 bg-gray-200 rounded w-24"></div>
-                                </td>
-                                <td>
-                                    <div class="h-4 bg-gray-200 rounded w-28"></div>
-                                </td>
-                                <td>
-                                    <div class="h-4 bg-gray-200 rounded w-36"></div>
-                                </td>
-                                <td>
-                                    <div class="h-4 bg-gray-200 rounded w-32"></div>
-                                </td>
-                                <td>
-                                    <div class="h-4 bg-gray-200 rounded w-40"></div>
-                                </td>
-                            </tr>
-                        </template>
-                    </template>
-                    <template x-if="!loading && rows.length">
-                        <template x-for="d in rows" :key="d.kSelf">
-                            <tr class="border-t">
-                                <td class="py-2 pr-2" x-text="d.sName"></td>
-                                <td x-text="d.sType"></td>
-                                <td x-text="d.sIP"></td>
-
-                                <!-- Latest Backup -->
-                                <td>
-                                    <template x-if="d.latestBackup">
-                                        <a href="javascript:void(0)" 
-                                           @click="downloadLatest(d.latestBackup)" 
-                                           class="text-blue-700 hover:underline"
-                                           x-text="fmtDate(d.latestBackup.tComplete)"
-                                        ></a>
-                                    </template>
-                                    <template x-if="!d.latestBackup">
-                                        <span class="text-gray-500">No backups yet</span>
-                                    </template>
-                                </td>
-
-                                <!-- Next Scheduled -->
-                                <td>
-                                    <template x-if="d.nextScheduled">
-                                        <div class="flex items-center gap-2">
-                                            <span x-text="fmtDate(d.nextScheduled.tTime)"></span>
-
-                                            <!-- Overdue badge if more than 1 hour ago -->
-                                            <span
-                                                x-show="isOverdue(d.nextScheduled.tTime)"
-                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 border border-red-300"
-                                            >
-                                                Overdue
-                                            </span>
-                                        </div>
-                                    </template>
-
-                                    <template x-if="!d.nextScheduled">
-                                        <span class="text-gray-500">No upcoming</span>
-                                    </template>
-                                </td>
-
-                                <!-- Actions -->
-                                <td class="whitespace-nowrap">
-                                    <template x-if="d.sType !== 'OneNetLog'">
-                                        <div>
-                                            <button class="text-blue-700 mr-3" @click="openEdit(d)">Edit</button>
-                                            <button
-                                                class="text-amber-700 disabled:opacity-60 disabled:cursor-not-allowed"
-                                                @click="scheduleNow(d)"
-                                                :disabled="schedulingNowId === d.kSelf"
-                                            >
-                                                <span x-show="schedulingNowId !== d.kSelf">Schedule Now</span>
-                                                <span x-show="schedulingNowId === d.kSelf">Scheduling…</span>
-                                            </button>
-                                        </div>
-                                    </template>
-                                    <template x-if="d.sType === 'OneNetLog'">
-                                        <span class="text-gray-500">N/A</span>
-                                    </template>
-                                </td>
-                            </tr>
-                        </template>
-                    </template>
-                    <template x-if="!loading && !rows.length">
-                        <tr>
-                            <td colspan="6" class="py-4 text-center text-gray-500">No devices found.</td>
-                        </tr>
-                    </template>
                 </tbody>
             </table>
         </div>
@@ -369,28 +270,10 @@ include __DIR__ . '/../src/components/navbar.php';
 
       </div>
     </div>
-
+  </div><!--Loading div end-->  
   </main>
 
-<script>
-
-    window.devicesTableOptions = {
-        pageLength: 25,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, -1]],
-        order: [[0, 'asc']],
-        columnDefs: [
-            { 
-                orderable: false, 
-                targets: [5]
-            },
-            {
-                targets: [3,4],
-                type: 'date',
-                className: "dt-nowrap",
-            },
-        ],
-    };
-
+    <script>
     function devicesPage(){
         const DOW = [
             { v:0, label: 'None' },
@@ -415,9 +298,12 @@ include __DIR__ . '/../src/components/navbar.php';
             rows: [],
             error: '',
             loading: true,
-            dataTable: null,
+
             page: 1, pages: 1, pageSize: 25, total: 0,
             pageCache: {},
+
+            dt: null,
+
             showModal: false,
             edit: {
                 kSelf: null,
@@ -450,10 +336,10 @@ include __DIR__ . '/../src/components/navbar.php';
             debouncedSearch() {
                 clearTimeout(this.searchTimeout);
                 this.searchTimeout = setTimeout(() => {
-                    this.page = 1;
-                    this.clearPageCache();
-                    this.load();
-                }, 300);
+                    if (this.dt) {
+                        this.dt.search((this.searchTerm || '').trim()).draw();
+                    }
+                }, 150);
             },
 
             toggleCreateForm() {
@@ -500,6 +386,7 @@ include __DIR__ . '/../src/components/navbar.php';
                 this.pageCache = {};
             },
 
+
             async create() {
               this.isCreating = true;
               this.createError = '';
@@ -533,7 +420,8 @@ include __DIR__ . '/../src/components/navbar.php';
                 toast.success('Device created');
                 this.resetForm();
                 this.showCreateForm = false;
-                this.clearPageCache();
+
+                // reload DataTable data
                 await this.load(); 
               } catch (e) {
                 this.createError = e.message || 'Failed to create device';
@@ -545,7 +433,7 @@ include __DIR__ . '/../src/components/navbar.php';
 
             async init(){ 
                 await this.loadDeviceTypes();
-                this.load(); 
+                await this.load(); 
             },
 
             async loadDeviceTypes() {
@@ -566,86 +454,177 @@ include __DIR__ . '/../src/components/navbar.php';
               const d = new Date(dt);
               return isNaN(d) ? '' : d.toLocaleString();
             },
-            
-            async refresh() {
-                this.clearPageCache();
-                await this.load();
-            },
 
-            async load() {
+            async load(){
                 this.error = '';
                 this.loading = true;
-                const dt = Date.now();
 
                 try {
-                    const term = encodeURIComponent(this.searchTerm.trim() || '');
-                    const r = await api(
-                        `devices/summary?page=1&pageSize=5000&search=${term}&_=${dt}`
-                    );
-
+                    const term = encodeURIComponent('');
+                    const r = await api(`devices/summary?page=1&pageSize=5000&search=${term}`);  
                     const rows = r.data || [];
+
                     this.rows = rows;
-                    this.total = rows.length;
-                    this.pages = 1;
-                    this.page = 1;
 
-                    this.$nextTick(() => {
-                        // Destroy existing DataTable instance if present
-                        if (this.dataTable) {
-                            this.dataTable.destroy();
-                            this.dataTable = null;
-                        }
+                    this.ensureDataTable();
 
-                        // Re-initialize on the fresh DOM
-                        this.dataTable = $('#devices-table').DataTable(
-                            window.devicesTableOptions || {}
-                        );
-                    });
-                } catch (e) {
-                    console.error(e);
+                    this.dt.clear();
+                    this.dt.rows.add(rows);
+                    this.dt.draw();
+
+                } catch(e){ 
                     toast.error(`Failed to load devices: ${e.message}`);
                 } finally {
                     this.loading = false;
                 }
             },
-            goToPage(p) {
-                const target = Number(p);
-                if (!target || target < 1 || target > this.pages) return;
-                this.page = target;
-                this.load();
-            },
 
-            nextPage() {
-                if (this.page < this.pages) {
-                    this.page++;
-                    this.load();
+            ensureDataTable() {
+                if (this.dt) return;
+
+                if (!window.jQuery || !jQuery.fn || !jQuery.fn.DataTable) {
+                    this.error = 'DataTables is not loaded. Add jQuery + DataTables CSS/JS to head.php.';
+                    toast.error(this.error);
+                    return;
                 }
+
+                const self = this;
+
+                this.dt = jQuery('#devicesTable').DataTable({
+                    pageLength: this.pageSize || 25,
+                    lengthMenu: [10, 25, 50, 100, 250, 1000],
+                    order: [[0, 'asc']],
+                    data: [],
+                    columns: [
+                        { data: 'sName', title: 'Name' },
+                        { data: 'sType', title: 'Type' },
+                        { data: 'sIP', title: 'IP' },
+
+                        {
+                            data: 'latestBackup',
+                            title: 'Latest Backup',
+                            orderable: true,
+                            render: function(data, type, row) {
+                                if (!data) {
+                                    return '<span class="text-gray-500">No backups yet</span>';
+                                }
+
+                                const dt = data.tComplete;
+                                const d = new Date(dt);
+                                const label = isNaN(d) ? '' : d.toLocaleString();
+
+                                if (type === 'sort' || type === 'type') {
+                                    const ts = isNaN(d) ? 0 : d.getTime();
+                                    return ts;
+                                }
+
+                                return `<a href="javascript:void(0)" class="text-blue-700 hover:underline js-dl-latest" data-kself="${data.kSelf}">${label}</a>`;
+                            }
+                        },
+
+                        {
+                            data: 'nextScheduled',
+                            title: 'Next Scheduled',
+                            orderable: true,
+                            render: function(data, type, row) {
+                                if (!data) {
+                                    return '<span class="text-gray-500">No upcoming</span>';
+                                }
+
+                                const dt = data.tTime;
+                                const d = new Date(dt);
+                                const label = isNaN(d) ? '' : d.toLocaleString();
+
+                                // For sorting
+                                if (type === 'sort' || type === 'type') {
+                                    const ts = isNaN(d) ? 0 : d.getTime();
+                                    return ts;
+                                }
+
+                                let overdueHtml = '';
+                                if (dt) {
+                                    const now = new Date();
+                                    const diffMs = now - d;
+                                    if (!isNaN(d) && diffMs > (60 * 60 * 1000)) {
+                                        overdueHtml =
+                                            `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 border border-red-300 ml-2">Overdue</span>`;
+                                    }
+                                }
+
+                                return `<div class="flex items-center gap-2"><span>${label}</span>${overdueHtml}</div>`;
+                            }
+                        },
+
+                        // Actions
+                        {
+                            data: null,
+                            title: 'Actions',
+                            orderable: false,
+                            searchable: false,
+                            className: 'whitespace-nowrap',
+                            render: function(data, type, row) {
+                                if (row.sType === 'OneNetLog') {
+                                    return '<span class="text-gray-500">N/A</span>';
+                                }
+
+                                return `
+                                  <div>
+                                    <button class="text-blue-700 mr-3 js-edit" type="button" data-kself="${row.kSelf}">Edit</button>
+                                    <button class="text-amber-700 js-sched" type="button" data-kself="${row.kSelf}">
+                                      Schedule Now
+                                    </button>
+                                  </div>
+                                `;
+                            }
+                        }
+                    ],
+                    autoWidth: false,
+                    drawCallback: function() {
+                        if (self.schedulingNowId) {
+                            jQuery('#devicesTable .js-sched').each(function() {
+                                const k = Number(jQuery(this).data('kself'));
+                                if (k === Number(self.schedulingNowId)) {
+                                    jQuery(this).prop('disabled', true)
+                                                .addClass('disabled:opacity-60 disabled:cursor-not-allowed')
+                                                .text('Scheduling…');
+                                }
+                            });
+                        }
+                    }
+                });
+
+                const table = jQuery('#devicesTable');
+
+                table.on('click', '.js-dl-latest', function() {
+                    const k = jQuery(this).data('kself');
+                    if (k) {
+                        window.location = `/backups.php?download=${k}`;
+                    }
+                });
+
+                table.on('click', '.js-edit', function() {
+                    const k = Number(jQuery(this).data('kself'));
+                    const row = self.rows.find(r => Number(r.kSelf) === k);
+                    if (row) self.openEdit(row);
+                });
+
+                table.on('click', '.js-sched', async function() {
+                    const k = Number(jQuery(this).data('kself'));
+                    const row = self.rows.find(r => Number(r.kSelf) === k);
+                    if (!row) return;
+
+                    jQuery(this).prop('disabled', true).text('Scheduling…');
+
+                    await self.scheduleNow(row);
+
+                });
             },
-
-            prevPage() {
-                if (this.page > 1) {
-                    this.page--;
-                    this.load();
-                }
-            },
-
-            changePageSize(size) {
-                const s = Number(size);
-                if (!s || s < 0) return;
-                this.pageSize = s;
-                this.page = 1;
-                this.clearPageCache();
-                this.load();
-            },
-
-
 
             downloadLatest(latest){
               if (!latest?.kSelf) return;
               window.location = `/backups.php?download=${latest.kSelf}`;
             },
 
-            // Schedule a manual “now”
             async scheduleNow(d){
                 if(!d?.kSelf) return;
                 if (d.sType === 'OneNetLog') return;
@@ -662,7 +641,8 @@ include __DIR__ . '/../src/components/navbar.php';
                         })
                     });
                     toast.success(`Backup scheduled for device ${d.sName}`);
-                    this.clearPageCache();
+
+                    // refresh DT
                     await this.load();
                 } catch (e) {
                     this.error = e.message || `Failed to schedule backup for device ${d.sName}`;
@@ -716,7 +696,8 @@ include __DIR__ . '/../src/components/navbar.php';
                         iAutoHour: 0,
                         iAutoWeeks: 1
                     };
-                    this.clearPageCache();
+
+                    // refresh DT
                     await this.load();
                 } catch(e){ 
                     this.editError = e.message || 'Failed to save changes';
@@ -745,7 +726,8 @@ include __DIR__ . '/../src/components/navbar.php';
                         iAutoHour: 0,
                         iAutoWeeks: 1
                     };
-                    this.clearPageCache();
+
+                    // refresh DT
                     await this.load();
                 } catch(e) { 
                     this.editError = e.message || 'Failed to delete device';

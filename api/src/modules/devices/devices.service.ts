@@ -62,7 +62,7 @@ export const devicesService = {
 
     async listDeviceSummaries(page = 1, pageSize = 25, search='') {
         const key = `devices:summary:v1:${page}:${pageSize}:${search.toLowerCase()}`;
-        return getOrSetCache(key, 30, () => computeDeviceSummaries(page, pageSize, search));
+        return getOrSetCache(key, 300, () => computeDeviceSummaries(page, pageSize, search));
     },
 
 
@@ -70,6 +70,27 @@ export const devicesService = {
     const device = await prisma.device.findUnique({ where: { kSelf: id } });
     if (!device) throw { status: 404, code: "DEVICE_NOT_FOUND", message: "Device not found" };
     return device;
+  },
+
+  async resolveDeviceIdentity(id: number) {
+    const device = await prisma.device.findUnique({ where: { kSelf: id } });
+    if (device) {
+      return { kSelf: device.kSelf, sName: device.sName, sType: device.sType, sIP: device.sIP, deleted: false };
+    }
+
+    const tombstone = await prisma.deviceTombstone.findUnique({ where: { kSelf: id } });
+    if (tombstone) {
+      return {
+        kSelf: tombstone.kSelf,
+        sName: tombstone.sName,
+        sType: tombstone.sType,
+        sIP: tombstone.sIP,
+        deleted: true,
+        deletedAt: tombstone.deletedAt,
+      };
+    }
+
+    throw { status: 404, code: "DEVICE_NOT_FOUND", message: "Device not found" };
   },
 
     async createDevice(data: any, reqMeta: any) {
@@ -142,6 +163,8 @@ export const devicesService = {
 
 
       async deleteDevice(id: number, reqMeta: any) {
+        await invalidateCache("devices:summary:v1:");
+
         const { removed, logDevice } = await prisma.$transaction(async (tx) => {
           const dev = await tx.device.findUnique({ where: { kSelf: id } });
           if (!dev) {
@@ -167,10 +190,21 @@ export const devicesService = {
               await tx.backup.deleteMany({ where: { kDevice: logDevice.kSelf } });
               await tx.schedule.deleteMany({ where: { kDevice: logDevice.kSelf } });
               await tx.device.delete({ where: { kSelf: logDevice.kSelf } });
+              await tx.deviceTombstone.upsert({
+                where: { kSelf: logDevice.kSelf },
+                create: { kSelf: logDevice.kSelf, sName: logDevice.sName, sType: logDevice.sType, sIP: logDevice.sIP },
+                update: { sName: logDevice.sName, sType: logDevice.sType, sIP: logDevice.sIP, deletedAt: new Date() },
+              });
             }
           }
 
           const removed = await tx.device.delete({ where: { kSelf: dev.kSelf } });
+
+          await tx.deviceTombstone.upsert({
+            where: { kSelf: removed.kSelf },
+            create: { kSelf: removed.kSelf, sName: removed.sName, sType: removed.sType, sIP: removed.sIP },
+            update: { sName: removed.sName, sType: removed.sType, sIP: removed.sIP, deletedAt: new Date() },
+          });
 
           return { removed, logDevice };
         });

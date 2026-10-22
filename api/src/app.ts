@@ -21,6 +21,7 @@ import settingsRouter from "./modules/settings/settings.router";
 import reportsRouter from "./modules/reports/reports.router";
 import auditRouter from "./modules/audit/audit.router";
 import cacheRouter from "./modules/cache/cache.router";
+import easRouter from "./modules/eas/eas.router";
 import { API_VERSION } from "./config/constants";
 
 process.on("unhandledRejection", (reason, promise) => {
@@ -85,6 +86,7 @@ app.use(`/${apiVersion}/schedules`, schedulesRouter);
 app.use(`/${apiVersion}/settings`, settingsRouter);
 app.use(`/${apiVersion}/reports`, reportsRouter);
 app.use(`/${apiVersion}/audit`, auditRouter);
+app.use(`/${apiVersion}/eas`, easRouter);
 
 // ------------------------------------------------------------
 // Swagger Documentation

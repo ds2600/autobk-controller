@@ -10,10 +10,14 @@ export type RedisClient = Redis;
 let client: RedisClient | null = null;
 
 export function getRedis(): RedisClient | null {
-    if (!env.REDIS_ENABLE) return null;
-    if (!env.REDIS_URL) return null;
-    if (!client) { 
-        client = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 2 });
+    if (!env.REDIS_ENABLE) {
+        return null;
+    }
+    if (!env.REDIS_URL) {
+        return null;
+    }
+    if (!client) {
+        client = new Redis(env.REDIS_URL, { maxRetriesPerRequest: 2});
     }
     return client;
 }
@@ -51,7 +55,11 @@ export async function invalidateCache(prefix: string): Promise<void> {
     if (!redis) return;
     try {
         const keys = await redis.keys(`${prefix}*`);
-        if (!keys.length) return;
+        if (!keys.length) {
+            console.log(`No cache keys to invalidate for prefix: ${prefix}`);
+            return;
+        }
+        console.log(`Invalidating ${keys.length} cache keys for prefix: ${prefix}`);
         await redis.del(...keys);
     } catch {
         // ignore errors

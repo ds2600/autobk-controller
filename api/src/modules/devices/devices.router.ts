@@ -14,6 +14,7 @@ router.get("/", devicesController.list);
 router.get("/types", devicesController.getTypes);
 router.get("/summary", devicesController.getSummary);
 router.get("/:id", devicesController.get);
+router.get("/:id/identity", devicesController.getIdentity);
 router.post("/", validate(createDeviceSchema), devicesController.create);
 router.patch("/:id", validate(updateDeviceSchema), devicesController.update);
 router.delete("/:id", devicesController.delete);

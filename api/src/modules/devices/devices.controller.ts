@@ -54,6 +54,16 @@ export const devicesController = {
     }
   },
 
+  async getIdentity(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = Number(req.params.id);
+      const identity = await devicesService.resolveDeviceIdentity(id);
+      res.json(buildSuccess(identity, (req as any).requestId));
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const reqMeta = {

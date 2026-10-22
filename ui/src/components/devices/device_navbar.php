@@ -4,7 +4,7 @@
   <div class="flex">
     <button
       class="text-slate-800 hover:text-slate-500 focus:outline-none flex items-center mr-4"
-      @click="refresh()"
+      @click="load()"
     >
       <i class="fa-solid fa-arrows-rotate w-6 fill-current"></i>
       <span class="ml-2">Refresh</span>

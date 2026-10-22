@@ -22,6 +22,7 @@ export const openapiSpec: OpenAPIV3.Document = {
     { name: "Reports" },
     { name: "Audit" },
     { name: "Cache" },
+    { name: "EAS" },
   ],
   security: [{ bearerAuth: [] }],
   paths: {
@@ -1021,6 +1022,120 @@ export const openapiSpec: OpenAPIV3.Document = {
         },
       },
     },
+    "/eas/onenet-version/latest": {
+      get: {
+        tags: ["EAS"],
+        summary: "Get metadata for the most recent OneNet version report",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/EnvelopeSuccess" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: { $ref: "#/components/schemas/EasOneNetReport" },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          "404": { description: "No report generated yet" },
+        },
+      },
+    },
+    "/eas/onenet-version/download": {
+      get: {
+        tags: ["EAS"],
+        summary: "Download the most recent OneNet version report CSV",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "File stream",
+            content: { "text/csv": {} },
+          },
+          "404": { description: "No report generated yet" },
+        },
+      },
+    },
+    "/eas/onenet-version/run": {
+      post: {
+        tags: ["EAS"],
+        summary: "Start the OneNet version scrape against every OneNet device (admin)",
+        description: "Starts the scrape and returns immediately with a job id. Poll /eas/onenet-version/jobs/{jobId}/log for progress and the result.",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "202": {
+            description: "Accepted, scrape started",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/EnvelopeSuccess" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: { $ref: "#/components/schemas/EasJobStart" },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          "500": { description: "EAS not configured on the agent" },
+        },
+      },
+    },
+    "/eas/onenet-version/jobs/{jobId}/log": {
+      get: {
+        tags: ["EAS"],
+        summary: "Poll the log and status of a OneNet version scrape job",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "jobId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+          {
+            name: "offset",
+            in: "query",
+            required: false,
+            description: "Return only lines appended after this offset",
+            schema: { type: "integer", default: 0 },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    { $ref: "#/components/schemas/EnvelopeSuccess" },
+                    {
+                      type: "object",
+                      properties: {
+                        data: { $ref: "#/components/schemas/EasJobLog" },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+          "404": { description: "Job not found" },
+        },
+      },
+    },
     "/cache/flush": {
       get: {
         tags: ["Cache"],
@@ -1358,6 +1473,36 @@ export const openapiSpec: OpenAPIV3.Document = {
       UpdateSetting: {
         type: "object",
         properties: { value: { type: "string", nullable: true } },
+      },
+      EasOneNetReport: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          generatedAt: { type: "string", format: "date-time" },
+        },
+        additionalProperties: false,
+      },
+      EasJobStart: {
+        type: "object",
+        properties: {
+          jobId: { type: "string" },
+          status: { type: "string", enum: ["running"] },
+        },
+        additionalProperties: false,
+      },
+      EasJobLog: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["running", "succeeded", "failed"] },
+          lines: { type: "array", items: { type: "string" } },
+          nextOffset: { type: "integer" },
+          result: {
+            allOf: [{ $ref: "#/components/schemas/EasOneNetReport" }],
+            nullable: true,
+          },
+          error: { type: "string", nullable: true },
+        },
+        additionalProperties: false,
       },
     },
   },

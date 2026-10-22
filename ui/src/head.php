@@ -46,6 +46,7 @@
     </style>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="./js/app.js"></script>
+    <script src="./js/job-modal.js"></script>
 <?php if (!empty($additionalHeadContent)) {
     echo $additionalHeadContent;
 } ?>
