@@ -8,7 +8,7 @@ import { env } from "../config/env";
 export const mailer = nodemailer.createTransport({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE === "false",
+    secure: env.SMTP_SECURE,
     ...(env.SMTP_USER 
         ? {
             auth: {

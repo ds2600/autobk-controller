@@ -5,8 +5,17 @@ import { z } from "zod";
 // ------------------------------------------------------------
 // Environment Variable Schema
 // ------------------------------------------------------------
+// z.coerce.boolean() calls JS Boolean(value), so any non-empty string
+// (including the literal "false") coerces to true. Env vars arrive as
+// strings, so booleans need an explicit string comparison instead.
+const zBoolEnv = (def: boolean) =>
+    z
+        .string()
+        .optional()
+        .transform((v) => (v ?? String(def)).toLowerCase() === "true");
+
 const EnvSchema = z.object({
-    
+
     APP_NAME: z.string().default("AutoBk Controller"),
     APP_URL: z.string().url("APP_URL must be a valid URL").default("http://localhost:3000"),
 
@@ -18,7 +27,7 @@ const EnvSchema = z.object({
 
     CORS_ORIGINS: z.string().optional(),
 
-    REDIS_ENABLE: z.coerce.boolean().default(false),
+    REDIS_ENABLE: zBoolEnv(false),
     REDIS_URL: z.string().optional(),
     CACHE_TTL_DEVICES_SUMMARY: z.coerce.number().default(300),
 
@@ -36,18 +45,18 @@ const EnvSchema = z.object({
 
     LOG_LEVEL: z.string().default("info"),
 
-    ENABLE_SWAGGER: z.coerce.boolean().default(false), 
+    ENABLE_SWAGGER: zBoolEnv(false), 
     WEBHOOK_URL: z.string().optional(),
 
     DOCS_BASIC_USER: z.string().optional(),
     DOCS_BASIC_PASS: z.string().optional(),
 
-    SMTP_ENABLE: z.coerce.boolean().default(false),
+    SMTP_ENABLE: zBoolEnv(false),
     MAIL_FROM: z.string().email("MAIL_FROM must be a valid email").optional(),
     MAIL_NAME: z.string().optional(),
     SMTP_HOST: z.string().optional(),
     SMTP_PORT: z.coerce.number().optional(),
-    SMTP_SECURE: z.coerce.boolean().default(false),
+    SMTP_SECURE: zBoolEnv(false),
     SMTP_USER: z.string().optional(),
     SMTP_PASS: z.string().optional(),
 
