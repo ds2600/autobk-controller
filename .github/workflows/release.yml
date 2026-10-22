@@ -97,7 +97,11 @@ jobs:
           EOF
 
           mkdir -p dist-bundle
-          tar czf "dist-bundle/autobk-controller-v${VERSION}.tar.gz" -C "$(dirname "$STAGE")" "autobk-controller-v${VERSION}"
+          # Tar the CONTENTS of $STAGE, not $STAGE itself -- uploadBundle() in
+          # updates.service.ts expects manifest.json/api/ui directly at the archive root,
+          # since the staging dir it extracts into already provides the per-upload container.
+          # A wrapping top-level directory here would put manifest.json one level too deep.
+          tar czf "dist-bundle/autobk-controller-v${VERSION}.tar.gz" -C "$STAGE" .
           sha256sum "dist-bundle/autobk-controller-v${VERSION}.tar.gz" | awk '{print $1}' > "dist-bundle/autobk-controller-v${VERSION}.tar.gz.sha256"
 
       - name: Upload dry-run artifact
