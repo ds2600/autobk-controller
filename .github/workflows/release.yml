@@ -20,6 +20,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Default GITHUB_TOKEN permissions are read-only on repos where that's the org/repo
+    # default -- creating a Release (and generating its notes) needs write access to
+    # contents explicitly, or softprops/action-gh-release fails with "Resource not
+    # accessible by integration" even though the build itself succeeds.
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
