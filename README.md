@@ -234,9 +234,13 @@ in place while the same process is still running it is not safe.
         vendor/                        # composer install runs fresh per release
         web/
         src/
+      certs -> ../../shared/certs      # symlinked too, if nginx serves TLS from inside
+                                        # the release tree -- optional, skipped if absent
   shared/
     .env                               # the one real api/.env — holds secrets, never
                                         # part of a release bundle or source control
+    certs/                             # TLS certs, same reasoning as .env -- server-
+                                        # specific, never part of a release bundle
   current -> releases/0.4.0            # the running service follows this symlink
   var/
     updates/

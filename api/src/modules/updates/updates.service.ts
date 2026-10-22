@@ -237,6 +237,17 @@ function runApply(job: UpdateJob, stagingId: string, reqMeta: AuditMeta) {
                 appendLine(job, `WARNING: ${sharedEnvPath} not found -- new release's api/.env will be missing`);
             }
 
+            // TLS certs referenced by nginx (e.g. current/certs/...) are server-specific the
+            // same way .env is -- never part of the bundle, so every release needs the same
+            // symlink-from-shared treatment. Optional: not every deployment terminates TLS
+            // with certs living inside the release tree, so skip silently if there's nothing
+            // in shared/certs to link.
+            const sharedCertsPath = path.join(SHARED_DIR, "certs");
+            if (fs.existsSync(sharedCertsPath)) {
+                fs.symlinkSync(sharedCertsPath, path.join(releaseDir, "certs"));
+                appendLine(job, "Linked certs/ from shared/certs");
+            }
+
             // If either of these two steps fails, `current` is never touched below, so the
             // running service keeps serving the old release untouched -- that's the whole
             // rollback story for a failed apply, no extra step needed.
