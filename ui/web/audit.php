@@ -231,7 +231,15 @@ function auditPage() {
                     {
                         data: 'createdAt',
                         title: 'Time',
-                        render: (data) => self.fmtDate(data),
+                        // DataTables sorts on whatever render() returns by default -- that
+                        // was the locale-formatted display string (e.g. "10/22/2026..."),
+                        // which sorts alphabetically, not chronologically. The raw ISO 8601
+                        // timestamp sorts correctly as plain text (most-significant-first),
+                        // so use it for sorting while still displaying the formatted date.
+                        render: {
+                            display: (data) => self.fmtDate(data),
+                            sort: (data) => data,
+                        },
                     },
                     { data: 'action', title: 'Action' },
                     {
