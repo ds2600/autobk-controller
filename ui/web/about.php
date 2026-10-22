@@ -350,7 +350,14 @@ include __DIR__ . '/../src/components/navbar.php';
                 startPath: 'updates/apply',
                 startOpts: { method: 'POST', body: JSON.stringify({ stagingId: this.stagingId }) },
                 logPath: (jobId, offset) => `updates/jobs/${jobId}/log?offset=${offset}`,
-                onDone: () => { this.jobRunning = false; this.manifest = null; this.stagingId = null; },
+                onDone: (job) => {
+                    this.jobRunning = false;
+                    this.manifest = null;
+                    this.stagingId = null;
+                    // The API process restarts itself on success -- there's nothing left
+                    // for the user to do but see the new version, so just show it to them.
+                    if (job.status === 'succeeded') this.reloadAfterRestart();
+                },
                 onError: () => { this.jobRunning = false; },
             });
         },
@@ -363,9 +370,17 @@ include __DIR__ . '/../src/components/navbar.php';
                 startPath: 'updates/rollback',
                 startOpts: { method: 'POST' },
                 logPath: (jobId, offset) => `updates/jobs/${jobId}/log?offset=${offset}`,
-                onDone: () => { this.jobRunning = false; },
+                onDone: (job) => {
+                    this.jobRunning = false;
+                    if (job.status === 'succeeded') this.reloadAfterRestart();
+                },
                 onError: () => { this.jobRunning = false; },
             });
+        },
+
+        reloadAfterRestart() {
+            toast.success('Done. Reloading in a few seconds...');
+            setTimeout(() => location.reload(), 4000);
         },
 
         usedMemory() {

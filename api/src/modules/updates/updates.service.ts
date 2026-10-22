@@ -60,10 +60,21 @@ interface AuditMeta {
 const jobs = new Map<string, UpdateJob>();
 let activeJobId: string | null = null;
 
+// eslint-disable-next-line no-control-regex
+const ANSI_ESCAPE_PATTERN = /\x1b\[[0-9;]*[a-zA-Z]/g;
+
 function appendLine(job: UpdateJob, line: string) {
     if (!line) return;
-    job.lines.push(line);
+    // Running under a pty (see runStep) makes npm/composer/prisma emit color codes they'd
+    // otherwise suppress when piped -- strip them so the Tail Modal shows plain text.
+    const clean = line.replace(ANSI_ESCAPE_PATTERN, "");
+    if (!clean) return;
+    job.lines.push(clean);
     if (job.lines.length > MAX_LOG_LINES) job.lines.splice(0, job.lines.length - MAX_LOG_LINES);
+}
+
+function shellQuote(arg: string): string {
+    return `'${arg.replace(/'/g, `'\\''`)}'`;
 }
 
 function pipeLines(stream: NodeJS.ReadableStream, onLine: (line: string) => void) {
@@ -85,7 +96,15 @@ function pipeLines(stream: NodeJS.ReadableStream, onLine: (line: string) => void
 function runStep(job: UpdateJob, command: string, args: string[], cwd: string): Promise<void> {
     return new Promise((resolve, reject) => {
         appendLine(job, `$ ${command} ${args.join(" ")} (in ${cwd})`);
-        const proc = spawn(command, args, {
+
+        // Piped stdout (what spawn() gives a child by default) makes npm/composer/prisma
+        // switch to fully-buffered output -- nothing shows up until the process exits,
+        // which is why the Tail Modal only updated once a step finished instead of
+        // line-by-line. `script` allocates a real pty for the child, so it behaves like it
+        // would run interactively (line-buffered, flushed as it goes); -f/--flush also
+        // forces script's own copy to our pipe to flush immediately rather than buffering.
+        const fullCommand = [command, ...args].map(shellQuote).join(" ");
+        const proc = spawn("script", ["-qfe", "-c", fullCommand, "/dev/null"], {
             cwd,
             // systemd runs this process as root with no login shell, so HOME is often
             // unset in process.env -- composer hard-fails without it ("HOME or
