@@ -79,3 +79,11 @@ Plain PHP under `ui/web/*.php`, each starting with `require __DIR__ . '/../src/b
 ### Versioning
 
 `VERSION` (API) and `ui/VERSION` (UI) are bumped together per the global semantic-versioning rule — check both are in sync when reviewing a version bump.
+
+Bumping the version does **not** by itself trigger a release — `.github/workflows/release.yml` only runs on an actual pushed tag (`push: tags: v*.*.*`). Whenever a version bump lands on `main` (whether done directly, or merged from a branch), always give the user the exact tag/push commands needed to trigger the release build, e.g.:
+```bash
+git checkout main && git pull
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+Don't assume the user will know to do this or remember the syntax — state it explicitly every time, right after the version bump is in place on `main`.
