@@ -200,6 +200,21 @@ function scheduleRestart() {
     setTimeout(() => process.exit(0), 3000);
 }
 
+// The PHP side never restarts on its own -- PHP-FPM just keeps running and caching
+// compiled bytecode (opcache) for whatever files it first read, completely independent of
+// what `current` points to now. Every swap needs this, or PHP pages silently keep serving
+// whatever version was live the last time PHP-FPM happened to restart, no matter how many
+// releases have been applied since. Logged but non-fatal: the Node side already succeeded
+// and `current` already points at the new release by the time this runs, so a failure here
+// shouldn't roll any of that back -- it just means this one manual step still needs doing.
+async function restartPhpFpm(job: UpdateJob): Promise<void> {
+    try {
+        await runStep(job, "systemctl", ["restart", env.PHP_FPM_SERVICE], "/");
+    } catch (err: any) {
+        appendLine(job, `WARNING: failed to restart ${env.PHP_FPM_SERVICE} (${err.message}) -- PHP pages may keep serving the old release until it's restarted manually`);
+    }
+}
+
 function runApply(job: UpdateJob, stagingId: string, reqMeta: AuditMeta) {
     (async () => {
         try {
@@ -261,6 +276,8 @@ function runApply(job: UpdateJob, stagingId: string, reqMeta: AuditMeta) {
             fs.renameSync(tmpLink, CURRENT_SYMLINK);
             appendLine(job, `Repointed current -> ${releaseDir}`);
 
+            await restartPhpFpm(job);
+
             if (previousRelease) {
                 await prisma.appSetting.upsert({
                     where: { key: PREVIOUS_RELEASE_SETTING_KEY },
@@ -294,6 +311,8 @@ function runRollback(job: UpdateJob, previousRelease: string, reqMeta: AuditMeta
             fs.symlinkSync(previousRelease, tmpLink);
             fs.renameSync(tmpLink, CURRENT_SYMLINK);
             appendLine(job, `Repointed current -> ${previousRelease}`);
+
+            await restartPhpFpm(job);
 
             // No migration step here: this project's schema changes are additive-only, so
             // older code running against a newer schema is expected to be safe without a

@@ -58,6 +58,11 @@ const EnvSchema = z.object({
     // `shared/`, `current`, and `var/updates/staging/` dirs are derived from this one path --
     // see README.md's "Self-Update" section for the full directory structure this assumes.
     RELEASES_DIR: z.string().default("/opt/autobk-controller/releases"),
+    // systemd service name for the PHP-FPM pool -- apply/rollback restart it after every
+    // symlink swap, since PHP-FPM's opcache otherwise keeps serving whatever version was
+    // live the last time it happened to restart, independent of `current`. "php-fpm" is
+    // correct on RHEL/AlmaLinux; Debian/Ubuntu name it per-version (e.g. "php8.3-fpm").
+    PHP_FPM_SERVICE: z.string().default("php-fpm"),
 
     DOCS_BASIC_USER: z.string().optional(),
     DOCS_BASIC_PASS: z.string().optional(),
