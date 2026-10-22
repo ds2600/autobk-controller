@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/../src/bootstrap.php';
 
+if (!php_version_ok()) {
+    render_php_version_gate();
+}
+
 if (isset($_GET['resetPassword']) && $_GET['resetPassword'] === 'true') {
     unset($_COOKIE['autobk_jwt']);
     unset($_SESSION['user']);
