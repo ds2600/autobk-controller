@@ -19,6 +19,12 @@ export const ROLES = {
 
 export const API_VERSION = "v1";
 
+// Source of truth for the self-update check (api/src/modules/updates). Not an env var on
+// purpose: every install should check *this* project's releases, so this never varies by
+// deployment, and a fork already has to hand-edit the hardcoded GitHub links in
+// ui/web/about.php and ui/web/login.php -- editing this constant too is consistent with that.
+export const GITHUB_REPO = "ds2600/autobk-controller";
+
 export const DEFAULT_PAGE_SIZE = 25;
 export const MAX_PAGE_SIZE = 200;
 

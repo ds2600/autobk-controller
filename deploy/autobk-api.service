@@ -1,0 +1,28 @@
+# Reference systemd unit for running the AutoBk Controller API against the
+# releases/current symlink layout used by the self-update "apply"/"rollback" jobs
+# (api/src/modules/updates). See README.md's "Self-Update" section for the full
+# directory layout this assumes.
+#
+# Install:
+#   sudo cp deploy/autobk-api.service /etc/systemd/system/autobk-api.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now autobk-api
+#
+# Restart=always is required: the apply/rollback jobs deliberately exit the process
+# after a successful swap and expect the supervisor to bring it back up on the new
+# release.
+
+[Unit]
+Description=AutoBk Controller API
+After=network.target mariadb.service
+
+[Service]
+Type=simple
+User=autobk
+WorkingDirectory=/opt/autobk-controller/current/api
+ExecStart=/usr/bin/node dist/server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

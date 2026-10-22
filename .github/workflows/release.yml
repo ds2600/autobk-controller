@@ -1,0 +1,113 @@
+name: Release
+
+# Two entry points into the same build:
+#   - push a tag matching v*.*.* -> builds, verifies the tag against VERSION, and PUBLISHES
+#     a real GitHub Release with the bundle attached.
+#   - workflow_dispatch (dry_run) -> runs the identical build, but uploads the result as a
+#     plain Actions run artifact instead of touching Releases. This is how the workflow gets
+#     validated without creating anything public.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build only, upload as a run artifact instead of publishing a Release"
+        type: boolean
+        default: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        run: |
+          FILE_VERSION="$(cat VERSION | tr -d '[:space:]')"
+          echo "file_version=${FILE_VERSION}" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            TAG_VERSION="${TAG_NAME#v}"
+            echo "tag_version=${TAG_VERSION}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Hard-fail gate: catches tagging a commit where VERSION wasn't actually bumped. Only
+      # applies to a real tag push -- a manual dry run has no tag to compare against.
+      - name: Verify tag matches VERSION
+        if: github.event_name == 'push'
+        run: |
+          if [ "${{ steps.version.outputs.tag_version }}" != "${{ steps.version.outputs.file_version }}" ]; then
+            echo "::error::Tag v${{ steps.version.outputs.tag_version }} does not match VERSION file (${{ steps.version.outputs.file_version }}). Bump VERSION and ui/VERSION and commit before tagging."
+            exit 1
+          fi
+
+      - name: Verify VERSION and ui/VERSION match
+        run: |
+          UI_VERSION="$(cat ui/VERSION | tr -d '[:space:]')"
+          if [ "${{ steps.version.outputs.file_version }}" != "${UI_VERSION}" ]; then
+            echo "::error::VERSION (${{ steps.version.outputs.file_version }}) and ui/VERSION (${UI_VERSION}) disagree -- this project bumps them together."
+            exit 1
+          fi
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build API
+        working-directory: api
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble release bundle
+        env:
+          VERSION: ${{ steps.version.outputs.file_version }}
+        run: |
+          STAGE="$(mktemp -d)/autobk-controller-v${VERSION}"
+          mkdir -p "$STAGE/api" "$STAGE/ui"
+
+          cp -r api/dist "$STAGE/api/dist"
+          cp api/package.json api/package-lock.json "$STAGE/api/"
+          cp -r api/prisma "$STAGE/api/prisma"
+          cp VERSION "$STAGE/"
+
+          cp -r ui/web "$STAGE/ui/web"
+          cp -r ui/src "$STAGE/ui/src"
+          cp ui/VERSION ui/composer.json ui/composer.lock "$STAGE/ui/"
+
+          cat > "$STAGE/manifest.json" <<EOF
+          {
+            "version": "${VERSION}",
+            "builtAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "gitSha": "${GITHUB_SHA}",
+            "components": ["api", "ui"]
+          }
+          EOF
+
+          mkdir -p dist-bundle
+          tar czf "dist-bundle/autobk-controller-v${VERSION}.tar.gz" -C "$(dirname "$STAGE")" "autobk-controller-v${VERSION}"
+          sha256sum "dist-bundle/autobk-controller-v${VERSION}.tar.gz" | awk '{print $1}' > "dist-bundle/autobk-controller-v${VERSION}.tar.gz.sha256"
+
+      - name: Upload dry-run artifact
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: autobk-controller-v${{ steps.version.outputs.file_version }}
+          path: dist-bundle/*
+          retention-days: 7
+
+      - name: Publish release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          name: AutoBk Controller v${{ steps.version.outputs.file_version }}
+          generate_release_notes: true
+          files: |
+            dist-bundle/autobk-controller-v${{ steps.version.outputs.file_version }}.tar.gz
+            dist-bundle/autobk-controller-v${{ steps.version.outputs.file_version }}.tar.gz.sha256

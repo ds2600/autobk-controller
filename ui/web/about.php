@@ -1,12 +1,5 @@
 <?php
 require __DIR__ . '/../src/bootstrap.php';
-require __DIR__ . '/../src/utils/github.php';
-
-$github = get_latest_release('ds2600/autobk-controller');
-$githubJson = $github ? json_encode([
-    'version' => $github['version'],
-    'url'     => $github['url'],
-]) : null;
 
 $title = 'About AutoBk Controller';
 
@@ -15,12 +8,7 @@ $isAdmin = isset($user->role) && $user->role === 'Administrator';
 checkForcePasswordReset();
 
 include __DIR__ . '/../src/head.php';
-
-
-?>
-<script id="github-release-data" type="application/json"><?= $githubJson ?></script>
-<?php
-include __DIR__ . '/../src/components/navbar.php'; 
+include __DIR__ . '/../src/components/navbar.php';
 ?>
   <main class="max-w-6xl mx-auto p-4" x-data="aboutPage()" x-init="init()">
 <?php 
@@ -214,6 +202,42 @@ include __DIR__ . '/../src/components/navbar.php';
         </div>
         <!-- End Version Info -->
       </div>
+<?php if ($isAdmin): ?>
+      <!-- Self-Update -->
+      <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">Self-Update</h3>
+
+        <div class="mb-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+          <span class="text-slate-600">Undo the most recent apply, if one is on record.</span>
+          <button type="button" @click="rollback()" :disabled="jobRunning"
+            class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+            Rollback
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input type="file" accept=".tar.gz" x-ref="bundleFile" @change="onBundleSelected($event)" class="text-sm">
+        </div>
+
+        <div x-show="manifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+          <p>Staged: <span class="font-medium" x-text="`v${manifest?.version}`"></span>
+             &middot; built <span x-text="manifest?.builtAt"></span>
+             &middot; <span class="font-mono text-xs" x-text="manifest?.gitSha"></span></p>
+          <button type="button" @click="applyUpdate()" :disabled="jobRunning"
+            class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+            Apply Update
+          </button>
+        </div>
+
+        <p x-show="uploadError" x-cloak class="mt-3 text-sm text-red-600" x-text="uploadError"></p>
+
+        <p class="mt-3 text-xs text-slate-500">
+          Download the release bundle (the <code>.tar.gz</code> asset) from the
+          <a :href="latestUrl || 'https://github.com/ds2600/autobk-controller/releases'" target="_blank" class="text-blue-600 underline">GitHub release page</a>,
+          then upload it here.
+        </p>
+      </div>
+<?php endif; ?>
     </section>
     <section class="mt-6 text-center">
         <p class="text-xs text-slate-500 mt-4 mx-auto align-center">
@@ -243,10 +267,14 @@ include __DIR__ . '/../src/components/navbar.php';
         latestVersion: null,
         latestUrl: '',
         isUpToDate: true,
+        manifest: null,
+        stagingId: null,
+        jobRunning: false,
+        uploadError: '',
 
         async init() {
           await this.load();
-          //this.checkForUpdate();
+          this.checkForUpdate();
         },
 
         async load() {
@@ -279,29 +307,69 @@ include __DIR__ . '/../src/components/navbar.php';
 
         async checkForUpdate() {
             try {
-                const phpData = document.getElementById('github-release-data');
-                if (!phpData) return;
-
-                const { version, url } = JSON.parse(phpData.textContent);
-                this.latestVersion = version;
-                this.latestUrl = url;
-
-                const cmp = this.compareSemver(this.appVersion, this.latestVersion);
-                this.isUpToDate = cmp >= 0;
+                const r = await api('updates/check');
+                const d = r.data || {};
+                this.latestVersion = d.latestVersion;
+                this.latestUrl = d.releaseUrl;
+                this.isUpToDate = d.isUpToDate;
             } catch (e) {
                 console.warn('Release check failed.', e);
             }
         },
 
-        compareSemver(a, b) {
-            const normalize = v => (v || '').replace(/^v/, '').split('.').map(Number);
-            const aa = normalize(a);
-            const bb = normalize(b);
-            for (let i = 0; i < 3; i++) {
-                const diff = (aa[i] ?? 0) - (bb[i] ?? 0);
-                if (diff !== 0) return diff > 0 ? 1 : -1;
+        async onBundleSelected(evt) {
+            const file = evt.target.files?.[0];
+            if (!file) return;
+
+            this.uploadError = '';
+            this.manifest = null;
+            this.stagingId = null;
+
+            const form = new FormData();
+            form.append('bundle', file);
+
+            try {
+                const res = await fetch(API_BROWSER_BASE + 'v1/updates/upload', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: form,
+                });
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(body?.error?.message || res.statusText || 'Upload failed');
+
+                this.stagingId = body.data.stagingId;
+                this.manifest = body.data.manifest;
+            } catch (e) {
+                this.uploadError = e?.message || 'Upload failed.';
+            } finally {
+                this.$refs.bundleFile.value = '';
             }
-            return 0;
+        },
+
+        applyUpdate() {
+            if (!this.stagingId || this.jobRunning) return;
+            this.jobRunning = true;
+            JobModal.open({
+                title: `Apply v${this.manifest?.version}`,
+                startPath: 'updates/apply',
+                startOpts: { method: 'POST', body: JSON.stringify({ stagingId: this.stagingId }) },
+                logPath: (jobId, offset) => `updates/jobs/${jobId}/log?offset=${offset}`,
+                onDone: () => { this.jobRunning = false; this.manifest = null; this.stagingId = null; },
+                onError: () => { this.jobRunning = false; },
+            });
+        },
+
+        rollback() {
+            if (this.jobRunning) return;
+            this.jobRunning = true;
+            JobModal.open({
+                title: 'Rollback to previous release',
+                startPath: 'updates/rollback',
+                startOpts: { method: 'POST' },
+                logPath: (jobId, offset) => `updates/jobs/${jobId}/log?offset=${offset}`,
+                onDone: () => { this.jobRunning = false; },
+                onError: () => { this.jobRunning = false; },
+            });
         },
 
         usedMemory() {
