@@ -34,8 +34,7 @@ include __DIR__ . '/../src/components/navbar.php';
     <section class="bg-white border rounded-2xl p-4 mb-4">
         <h2 class="font-medium mb-3">Resolve Device ID</h2>
         <p class="text-sm text-gray-500 mb-3">
-            Look up a device by its numeric id (<code>kSelf</code>/<code>kDevice</code>) — e.g. a backup directory
-            name on disk, or a raw id seen below. Works for deleted devices too.
+            Look up a device by its numeric ID (<code>kSelf</code>/<code>kDevice</code>). Works for deleted devices.
         </p>
         <form class="flex items-end gap-3" @submit.prevent="resolveLookup">
             <div class="flex flex-col gap-1">
@@ -197,14 +196,22 @@ function auditPage() {
                 await Promise.all(deviceIds.map(id => this.resolveIdentity(id)));
 
                 this.rows = rows;
+                this.loading = false;
+                // Wait for x-show to actually unhide the table before initializing DataTables --
+                // initializing while the container is still display:none locks in near-zero
+                // column widths, which is what made the table render tiny with the controls
+                // bar looking like it owned most of the width.
+                await this.$nextTick();
                 this.ensureDataTable();
-                this.dt.clear();
-                this.dt.rows.add(rows);
-                this.dt.draw();
+                if (this.dt) {
+                    this.dt.clear();
+                    this.dt.rows.add(rows);
+                    this.dt.draw();
+                    this.dt.columns.adjust();
+                }
             } catch (e) {
                 this.error = e.message || 'Failed to load audit log';
                 toast.error(this.error);
-            } finally {
                 this.loading = false;
             }
         },
@@ -213,7 +220,7 @@ function auditPage() {
             if (this.dt) return;
 
             if (!window.jQuery || !jQuery.fn || !jQuery.fn.DataTable) {
-                this.error = 'DataTables is not loaded. Add jQuery + DataTables CSS/JS to head.php.';
+                this.error = 'Could not load the audit table.';
                 toast.error(this.error);
                 return;
             }

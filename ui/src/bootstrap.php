@@ -59,6 +59,17 @@ function require_guest() {
     }
 }
 
+function eas_enabled(): bool {
+    $agentDir = $_ENV['AGENT_DIR'] ?? getenv('AGENT_DIR') ?? '';
+    if ($agentDir === '') return false;
+
+    $iniPath = rtrim($agentDir, '/') . '/autobk.ini';
+    if (!is_file($iniPath)) return false;
+
+    $ini = @parse_ini_file($iniPath, true);
+    return !empty($ini['EAS']['Directory']);
+}
+
 function require_admin() {
     $user = require_auth();
     if (empty($user->isAdmin) || $user->isAdmin !== true) {

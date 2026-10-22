@@ -12,7 +12,9 @@
     <ul class="flex items-center space-x-2">
         <li><a href="/devices.php" class="text-white hover:text-gray-300 px-4 py-2">Devices</a></li>
         <li><a href="/backups.php" class="text-white hover:text-gray-300 px-4 py-2">Backups</a></li>
+        <?php if (eas_enabled()): ?>
         <li><a href="/eas.php" class="text-white hover:text-gray-300 px-4 py-2">EAS</a></li>
+        <?php endif; ?>
 
         <?php if ($isAdmin) { ?>
             <li><a href="/users.php" class="text-white hover:text-gray-300 px-4 py-2">Users</a></li>

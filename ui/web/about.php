@@ -205,19 +205,15 @@ include __DIR__ . '/../src/components/navbar.php';
 <?php if ($isAdmin): ?>
       <!-- Self-Update -->
       <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-        <h3 class="text-sm font-semibold text-slate-700 mb-3">Self-Update</h3>
-
-        <div class="mb-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-          <span class="text-slate-600">Undo the most recent apply, if one is on record.</span>
-          <button type="button" @click="rollback()" :disabled="jobRunning"
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-semibold text-slate-700">Self-Update</h3>
+          <button type="button" @click="rollback()" :disabled="jobRunning" title="Roll back to the previous release"
             class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
             Rollback
           </button>
         </div>
 
-        <div class="flex items-center gap-3">
-          <input type="file" accept=".tar.gz" x-ref="bundleFile" @change="onBundleSelected($event)" class="text-sm">
-        </div>
+        <input type="file" accept=".tar.gz" x-ref="bundleFile" @change="onBundleSelected($event)" class="text-sm">
 
         <div x-show="manifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
           <p>Staged: <span class="font-medium" x-text="`v${manifest?.version}`"></span>
@@ -232,9 +228,9 @@ include __DIR__ . '/../src/components/navbar.php';
         <p x-show="uploadError" x-cloak class="mt-3 text-sm text-red-600" x-text="uploadError"></p>
 
         <p class="mt-3 text-xs text-slate-500">
-          Download the release bundle (the <code>.tar.gz</code> asset) from the
-          <a :href="latestUrl || 'https://github.com/ds2600/autobk-controller/releases'" target="_blank" class="text-blue-600 underline">GitHub release page</a>,
-          then upload it here.
+          Download the <code>.tar.gz</code> from the
+          <a :href="latestUrl || 'https://github.com/ds2600/autobk-controller/releases'" target="_blank" class="text-blue-600 underline">release page</a>,
+          then upload it above.
         </p>
       </div>
 <?php endif; ?>

@@ -5,6 +5,11 @@ $user = require_auth();
 $isAdmin = isset($user->role) && $user->role === 'Administrator';
 checkForcePasswordReset();
 
+if (!eas_enabled()) {
+    header('Location: /devices.php');
+    exit;
+}
+
 if (isset($_GET['download']) && $_GET['download'] === 'onenet-version') {
     $url = rtrim($apiInternalBase, '/') . "/v1/eas/onenet-version/download";
 
@@ -61,9 +66,6 @@ include __DIR__ . '/../src/components/navbar.php';
 <main class="max-w-6xl mx-auto p-4" x-data="easPage()" x-init="init()">
   <section class="mb-4">
     <h1 class="text-xl font-semibold">EAS</h1>
-    <p class="text-sm text-gray-600">
-      Tools for gathering information from EAS devices.
-    </p>
   </section>
 
   <div class="grid gap-6 md:grid-cols-2">
@@ -71,7 +73,7 @@ include __DIR__ . '/../src/components/navbar.php';
     <section class="bg-white border rounded-2xl p-4">
       <h2 class="font-medium mb-2">OneNet Software Versions</h2>
       <p class="text-sm text-gray-600 mb-4">
-        Connects to every OneNet device and pulls its software and OS version into a CSV report.
+        Pulls software and OS version from every OneNet device into a CSV.
       </p>
 
       <div class="flex items-center gap-3">
