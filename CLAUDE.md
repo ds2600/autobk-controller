@@ -60,9 +60,9 @@ JWT-based (`api/src/middleware/auth.ts`), token read from either `Authorization:
 
 Redis is optional (`REDIS_ENABLE`); `getRedis()` returns `null` when disabled and all cache helpers (`api/src/utils/redis.ts`: `getOrSetCache`, `invalidateCache`) no-op safely in that case — don't assume Redis is present. Cache keys are versioned prefixes (e.g. `devices:summary:v1:`); mutations that affect a cached list must call `invalidateCache(prefix)` themselves — it's not automatic.
 
-### Long-running agent operations (EAS)
+### Long-running operations: the Tail Modal pattern
 
-The `eas` module runs agent-side Python scripts on demand (`child_process.spawn`, using `AGENT_PYTHON` as the interpreter) and reads their CSV output back from `EAS_OUTPUT_DIR`. Currently this blocks the triggering HTTP request for the duration of the script (bounded by `EAS_RUN_TIMEOUT_MS`, default 10 min) — there's no job-id/polling layer yet for these. Keep this in mind before adding more long-running agent actions on this same synchronous pattern.
+The `eas` module runs agent-side Python scripts on demand (`child_process.spawn`, using `AGENT_PYTHON` as the interpreter) and reads their CSV output back from `EAS_OUTPUT_DIR`. It does **not** block the triggering HTTP request — `eas.service.ts` tracks an in-memory `Map<string, EasJob>` keyed by job id, `POST .../run` returns `202 { jobId, status }` immediately, and `GET .../jobs/:jobId/log?offset=` streams back `{ status, lines, nextOffset, result, error }` as the job progresses. `ui/web/js/job-modal.js` (`window.JobModal.open({ startPath, logPath, ... })`) is a generic, reusable client for this exact contract — any new long-running action (see `updates` module's apply/rollback jobs) should follow the same shape rather than reinventing it. Job state is in-memory only (lost on a process restart), which is an acceptable trade for an on-demand admin action whose triggering request has long since returned by the time it matters — `updates`' apply/rollback jobs are the one case where that restart actually happens *because of* the job itself, so they mark the job's terminal status before exiting the process (see `updates.service.ts`'s `scheduleRestart` comment) rather than relying on in-memory state surviving.
 
 ### Audit logging
 

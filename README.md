@@ -205,6 +205,75 @@ pip install -r requirements.txt
 
 ---
 
+## 11. Self-Update
+
+The About page shows an "Up-to-date" / "Update → vX.Y.Z" badge for any logged-in user,
+checked against this repo's [GitHub Releases](https://github.com/ds2600/autobk-controller/releases)
+(no token needed — the repo is public; see `GITHUB_TOKEN` in `.env.example` if you want a
+higher API rate limit). Administrators additionally get an upload/apply/rollback panel.
+
+**This is opt-in.** Out of the box, only the check/badge works — a fresh `git clone` install
+following steps 1–10 above runs fine with no further setup, and ignoring the self-update
+panel entirely is a supported way to run this project. The upload/apply/rollback flow only
+works once you've adopted the release-directory layout below, because applying an update
+in place while the same process is still running it is not safe.
+
+### Directory layout the apply/rollback jobs assume
+
+```
+/opt/autobk-controller/
+  releases/
+    0.3.0/            # a previous release, kept for rollback
+    0.4.0/
+      api/
+        .env -> ../../../shared/.env   # symlinked, never duplicated
+        dist/
+        node_modules/                  # npm ci runs fresh per release
+        prisma/
+      ui/
+        vendor/                        # composer install runs fresh per release
+        web/
+        src/
+  shared/
+    .env                               # the one real api/.env — holds secrets, never
+                                        # part of a release bundle or source control
+  current -> releases/0.4.0            # the running service follows this symlink
+  var/
+    updates/
+      staging/                         # uploaded bundles are extracted here before apply
+```
+
+`RELEASES_DIR` in `api/.env` points at `releases/`; `shared/`, `current`, and
+`var/updates/staging/` are derived as siblings of it (see `api/src/modules/updates/updates.service.ts`).
+
+### One-time migration to this layout
+
+If you're running from a plain `git clone` (the default install above), moving to the
+symlink layout is a manual, one-time step — see `UPGRADE.md` for the exact commands for
+the version that introduced this. The short version: move your existing checkout into
+`releases/<current version>/`, move `api/.env` into `shared/.env` and symlink it back,
+create the `current` symlink pointing at that release dir, and point your process
+supervisor at `current` instead of the old fixed path — a reference systemd unit is at
+`deploy/autobk-api.service`.
+
+### Using it day to day
+
+1. Bump `VERSION` and `ui/VERSION` together, commit, then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+2. `.github/workflows/release.yml` builds a combined `autobk-controller-vX.Y.Z.tar.gz` +
+   `.sha256` and publishes them as a GitHub Release on that tag — see the workflow file
+   for exactly what's bundled.
+3. On the server: download the `.tar.gz` from that release page, upload it in the About
+   page's admin panel (checksum is verified against the published release automatically),
+   then click **Apply Update**. The Tail Modal shows live progress (`npm ci`, `composer
+   install`, `prisma migrate deploy`, then the symlink swap); the API process exits itself
+   at the end so systemd/pm2 brings it back up on the new release.
+4. If something's wrong after an apply, click **Rollback** — it repoints `current` back to
+   the previous release directory and restarts the same way. No database migration is
+   reversed (this project's schema changes are additive-only, so old code against a newer
+   schema is expected to be safe).
+
+---
+
 ## Additional Notes
 
 ### Seeding the database

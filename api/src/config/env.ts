@@ -45,8 +45,19 @@ const EnvSchema = z.object({
 
     LOG_LEVEL: z.string().default("info"),
 
-    ENABLE_SWAGGER: zBoolEnv(false), 
+    ENABLE_SWAGGER: zBoolEnv(false),
     WEBHOOK_URL: z.string().optional(),
+
+    // Optional: raises the GitHub API rate limit for the self-update check (60/hr -> 5000/hr)
+    // and keeps the same code working unmodified if this repo is ever made private. Not
+    // required -- the repo is public, so the check works with no token at all.
+    GITHUB_TOKEN: z.string().optional(),
+    CACHE_TTL_GITHUB_RELEASE: z.coerce.number().default(3600),
+
+    // Release-directory + symlink layout for self-apply (api/src/modules/updates). Sibling
+    // `shared/`, `current`, and `var/updates/staging/` dirs are derived from this one path --
+    // see README.md's "Self-Update" section for the full directory structure this assumes.
+    RELEASES_DIR: z.string().default("/opt/autobk-controller/releases"),
 
     DOCS_BASIC_USER: z.string().optional(),
     DOCS_BASIC_PASS: z.string().optional(),
