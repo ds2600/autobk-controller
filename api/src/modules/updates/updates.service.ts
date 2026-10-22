@@ -2,6 +2,7 @@
 // src/modules/updates/updates.service.ts
 // ------------------------------------------------------------
 import fs from "fs";
+import os from "os";
 import path from "path";
 import crypto, { randomUUID } from "crypto";
 import { spawn } from "child_process";
@@ -84,7 +85,19 @@ function pipeLines(stream: NodeJS.ReadableStream, onLine: (line: string) => void
 function runStep(job: UpdateJob, command: string, args: string[], cwd: string): Promise<void> {
     return new Promise((resolve, reject) => {
         appendLine(job, `$ ${command} ${args.join(" ")} (in ${cwd})`);
-        const proc = spawn(command, args, { cwd });
+        const proc = spawn(command, args, {
+            cwd,
+            // systemd runs this process as root with no login shell, so HOME is often
+            // unset in process.env -- composer hard-fails without it ("HOME or
+            // COMPOSER_HOME must be set"), and separately refuses to run as root at all
+            // without this flag. Both only matter to composer, but setting them
+            // unconditionally is harmless for the npm/prisma steps too.
+            env: {
+                ...process.env,
+                HOME: process.env.HOME || os.homedir(),
+                COMPOSER_ALLOW_SUPERUSER: "1",
+            },
+        });
         if (proc.stdout) pipeLines(proc.stdout, (line) => appendLine(job, line));
         if (proc.stderr) pipeLines(proc.stderr, (line) => appendLine(job, line));
         proc.on("error", (err) => reject(err));
