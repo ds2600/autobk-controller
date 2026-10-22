@@ -103,8 +103,30 @@ function eas_enabled(): bool {
     $iniPath = rtrim($agentDir, '/') . '/autobk.ini';
     if (!is_file($iniPath)) return false;
 
-    $ini = @parse_ini_file($iniPath, true);
-    return !empty($ini['EAS']['Directory']);
+    // autobk.ini is written for the agent's own Python code and Node's lenient `ini`
+    // package (see constants.ts), not strict PHP-ini syntax -- parse_ini_file() returns
+    // false for the WHOLE FILE if anything else in it trips PHP's pickier parser, which
+    // silently looks identical to EAS just not being configured. Scan manually instead of
+    // trusting a whole-file parse.
+    $lines = @file($iniPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) return false;
+
+    $inEasSection = false;
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || $trimmed[0] === ';' || $trimmed[0] === '#') continue;
+
+        if (preg_match('/^\[(.+)\]$/', $trimmed, $m)) {
+            $inEasSection = (strcasecmp($m[1], 'EAS') === 0);
+            continue;
+        }
+
+        if ($inEasSection && preg_match('/^Directory\s*=\s*(.+)$/i', $trimmed, $m)) {
+            return trim($m[1], " \t\"'") !== '';
+        }
+    }
+
+    return false;
 }
 
 function require_admin() {

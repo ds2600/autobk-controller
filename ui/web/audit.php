@@ -23,7 +23,6 @@ include __DIR__ . '/../src/components/navbar.php';
 ?>
 
 <main class="max-w-6xl mx-auto p-4" x-data="auditPage()" x-init="init()">
-<div x-show="!loading" x-cloak>
 <?php include __DIR__ . '/../src/loading.php'; ?>
 
     <section class="flex items-center justify-between mb-4">
@@ -33,9 +32,6 @@ include __DIR__ . '/../src/components/navbar.php';
     <!-- Device ID resolver -->
     <section class="bg-white border rounded-2xl p-4 mb-4">
         <h2 class="font-medium mb-3">Resolve Device ID</h2>
-        <p class="text-sm text-gray-500 mb-3">
-            Look up a device by its numeric ID (<code>kSelf</code>/<code>kDevice</code>). Works for deleted devices.
-        </p>
         <form class="flex items-end gap-3" @submit.prevent="resolveLookup">
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-medium text-gray-700">Device ID</label>
@@ -97,7 +93,6 @@ include __DIR__ . '/../src/components/navbar.php';
         </div>
         <p class="text-sm text-red-600 mt-2" x-text="error"></p>
     </section>
-</div>
 </main>
 
 <script>
