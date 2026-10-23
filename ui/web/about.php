@@ -203,100 +203,125 @@ include __DIR__ . '/../src/components/navbar.php';
         <!-- End Version Info -->
       </div>
 <?php if ($isAdmin): ?>
-      <!-- Self-Update -->
-      <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-slate-700">Self-Update</h3>
-          <button type="button" @click="rollback()" :disabled="jobRunning" title="Roll back to the previous release"
-            class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-            Rollback
-          </button>
-        </div>
+      <!-- Updates -->
+      <div class="mt-6">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">Updates</h3>
+        <div class="grid gap-4 md:grid-cols-2">
+          <!-- Controller -->
+          <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-semibold text-slate-700">Controller</h4>
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                  x-text="selfVersion ? `v${selfVersion}` : 'Version: —'"
+                ></span>
+                <template x-if="latestVersion">
+                  <a
+                    :href="latestUrl || 'https://github.com/ds2600/autobk-controller/releases'"
+                    target="_blank"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
+                    :class="{
+                      'bg-green-50 text-green-700 border border-green-200': isUpToDate,
+                      'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100': !isUpToDate
+                    }"
+                    x-text="isUpToDate ? 'Up-to-date' : `Update → v${latestVersion}`"
+                  ></a>
+                </template>
+              </div>
+              <button type="button" @click="rollback()" :disabled="jobRunning || !previousVersion" title="Roll back to the previous release"
+                class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                Rollback
+              </button>
+            </div>
 
-        <input type="file" accept=".tar.gz" x-ref="bundleFile" @change="onBundleSelected($event)" class="text-sm">
+            <p x-show="checkFailed" x-cloak class="text-xs text-amber-600 mb-2">
+              Couldn't reach GitHub to check for updates — see the API log for details.
+            </p>
 
-        <div x-show="manifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-          <p>Staged: <span class="font-medium" x-text="`v${manifest?.version}`"></span>
-             &middot; built <span x-text="manifest?.builtAt"></span>
-             &middot; <span class="font-mono text-xs" x-text="manifest?.gitSha"></span></p>
-          <button type="button" @click="applyUpdate()" :disabled="jobRunning"
-            class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-            Apply Update
-          </button>
-        </div>
+            <input type="file" accept=".tar.gz" x-ref="bundleFile" @change="onBundleSelected($event)" class="text-sm">
 
-        <p x-show="uploadError" x-cloak class="mt-3 text-sm text-red-600" x-text="uploadError"></p>
+            <div x-show="manifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+              <p>Staged: <span class="font-medium" x-text="`v${manifest?.version}`"></span>
+                 &middot; built <span x-text="manifest?.builtAt"></span>
+                 &middot; <span class="font-mono text-xs" x-text="manifest?.gitSha"></span></p>
+              <button type="button" @click="applyUpdate()" :disabled="jobRunning"
+                class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                Apply Update
+              </button>
+            </div>
 
-        <p class="mt-3 text-xs text-slate-500">
-          Download the <code>.tar.gz</code> from the
-          <a :href="latestUrl || 'https://github.com/ds2600/autobk-controller/releases'" target="_blank" class="text-blue-600 underline">release page</a>,
-          then upload it above.
-        </p>
-      </div>
+            <p x-show="uploadError" x-cloak class="mt-3 text-sm text-red-600" x-text="uploadError"></p>
 
-      <!-- AutoBk Agent -->
-      <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center gap-2">
-            <h3 class="text-sm font-semibold text-slate-700">AutoBk Agent</h3>
-            <span
-              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
-              x-text="agentVersion ? `v${agentVersion}` : 'Version: —'"
-            ></span>
-            <template x-if="agentLatestVersion">
-              <a
-                :href="agentLatestUrl || 'https://github.com/ds2600/autobk-agent/releases'"
-                target="_blank"
-                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
-                :class="{
-                  'bg-green-50 text-green-700 border border-green-200': agentIsUpToDate,
-                  'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100': !agentIsUpToDate
-                }"
-                x-text="agentIsUpToDate ? 'Up-to-date' : `Update → v${agentLatestVersion}`"
-              ></a>
-            </template>
+            <p class="mt-3 text-xs text-slate-500">
+              Download the <code>.tar.gz</code> from the
+              <a :href="latestUrl || 'https://github.com/ds2600/autobk-controller/releases'" target="_blank" class="text-blue-600 underline">release page</a>
+              and upload it here.
+            </p>
           </div>
-          <button type="button" @click="rollbackAgent()" :disabled="agentJobRunning" title="Roll back the agent to its previous release"
-            class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-            Rollback
-          </button>
+
+          <!-- Agent -->
+          <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-semibold text-slate-700">Agent</h4>
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                  x-text="agentVersion ? `v${agentVersion}` : 'Version: —'"
+                ></span>
+                <template x-if="agentLatestVersion">
+                  <a
+                    :href="agentLatestUrl || 'https://github.com/ds2600/autobk-agent/releases'"
+                    target="_blank"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
+                    :class="{
+                      'bg-green-50 text-green-700 border border-green-200': agentIsUpToDate,
+                      'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100': !agentIsUpToDate
+                    }"
+                    x-text="agentIsUpToDate ? 'Up-to-date' : `Update → v${agentLatestVersion}`"
+                  ></a>
+                </template>
+              </div>
+              <button type="button" @click="rollbackAgent()" :disabled="agentJobRunning" title="Roll back the agent to its previous release"
+                class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                Rollback
+              </button>
+            </div>
+
+            <p x-show="agentCheckFailed" x-cloak class="text-xs text-amber-600 mb-2">
+              Couldn't reach the agent or GitHub to check for updates — see the API log for details.
+            </p>
+
+            <div class="flex items-center gap-2">
+              <button type="button" @click="downloadAgentUpdate()"
+                :disabled="agentJobRunning || agentIsUpToDate || !agentLatestVersion"
+                class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+                Download <span x-text="agentLatestVersion ? `v${agentLatestVersion}` : ''"></span>
+              </button>
+
+              <template x-if="agentManifest">
+                <button type="button" @click="applyAgentUpdate()" :disabled="agentJobRunning"
+                  class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                  Apply <span x-text="`v${agentManifest?.version}`"></span>
+                </button>
+              </template>
+            </div>
+
+            <div x-show="agentManifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+              <p>Staged: <span class="font-medium" x-text="`v${agentManifest?.version}`"></span>
+                 &middot; built <span x-text="agentManifest?.builtAt"></span>
+                 &middot; <span class="font-mono text-xs" x-text="agentManifest?.gitSha"></span></p>
+            </div>
+
+            <p x-show="agentError" x-cloak class="mt-3 text-sm text-red-600" x-text="agentError"></p>
+
+            <p class="mt-3 text-xs text-slate-500">
+              Downloads and checksum-verifies the release directly on the agent's host — no upload needed.
+            </p>
+          </div>
         </div>
-
-        <p x-show="agentCheckFailed" x-cloak class="text-xs text-amber-600 mb-2">
-          Couldn't reach the agent or GitHub to check for updates — see the API log for details.
-        </p>
-
-        <div class="flex items-center gap-2">
-          <button type="button" @click="downloadAgentUpdate()"
-            :disabled="agentJobRunning || agentIsUpToDate || !agentLatestVersion"
-            class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-            Download <span x-text="agentLatestVersion ? `v${agentLatestVersion}` : ''"></span>
-          </button>
-
-          <template x-if="agentManifest">
-            <button type="button" @click="applyAgentUpdate()" :disabled="agentJobRunning"
-              class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-              Apply <span x-text="`v${agentManifest?.version}`"></span>
-            </button>
-          </template>
-        </div>
-
-        <div x-show="agentManifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-          <p>Staged: <span class="font-medium" x-text="`v${agentManifest?.version}`"></span>
-             &middot; built <span x-text="agentManifest?.builtAt"></span>
-             &middot; <span class="font-mono text-xs" x-text="agentManifest?.gitSha"></span></p>
-        </div>
-
-        <p x-show="agentError" x-cloak class="mt-3 text-sm text-red-600" x-text="agentError"></p>
-
-        <p class="mt-3 text-xs text-slate-500">
-          Checked against the agent's own
-          <a href="https://github.com/ds2600/autobk-agent/releases" target="_blank" class="text-blue-600 underline">release page</a>.
-          Download fetches and checksum-verifies the release directly on the agent's host — no manual upload needed.
-          Only works once the agent has adopted the <code>releases/current</code> layout (see autobk-agent's <code>UPGRADE.md</code>).
-        </p>
       </div>
-      <!-- End AutoBk Agent -->
+      <!-- End Updates -->
 <?php endif; ?>
     </section>
     <section class="mt-6 text-center">
@@ -324,9 +349,12 @@ include __DIR__ . '/../src/components/navbar.php';
         freeStorage: 0,
         loading: true,
         error: '',
+        selfVersion: '',
         latestVersion: null,
+        previousVersion: null,
         latestUrl: '',
         isUpToDate: true,
+        checkFailed: false,
         manifest: null,
         stagingId: null,
         jobRunning: false,
@@ -356,6 +384,7 @@ include __DIR__ . '/../src/components/navbar.php';
             const d = r.data || {};
 
             this.appVersion = 'AutoBk Controller v' + (d.appVersion || '');
+            this.selfVersion = d.appVersion || '';
             this.apiVersion = d.apiVersion || '';
             this.nodeVersion = d.nodeVersion || '';
             this.dbVersion = d.dbVersion || '';
@@ -381,10 +410,13 @@ include __DIR__ . '/../src/components/navbar.php';
                 const r = await api('updates/check');
                 const d = r.data || {};
                 this.latestVersion = d.latestVersion;
+                this.previousVersion = d.previousVersion;
                 this.latestUrl = d.releaseUrl;
                 this.isUpToDate = d.isUpToDate;
+                this.checkFailed = !!d.checkFailed;
             } catch (e) {
                 console.warn('Release check failed.', e);
+                this.checkFailed = true;
             }
         },
 
@@ -431,14 +463,15 @@ include __DIR__ . '/../src/components/navbar.php';
                     this.stagingId = null;
                     // The API process restarts itself on success -- there's nothing left
                     // for the user to do but see the new version, so just show it to them.
-                    if (job.status === 'succeeded') this.reloadAfterRestart();
+                    if (job.status === 'succeeded') this.reloadAfterRestart(job.result?.version, 'apply');
                 },
                 onError: () => { this.jobRunning = false; },
             });
         },
 
         rollback() {
-            if (this.jobRunning) return;
+            if (this.jobRunning || !this.previousVersion) return;
+            if (!confirm(`Roll back from v${this.selfVersion} to v${this.previousVersion}?`)) return;
             this.jobRunning = true;
             JobModal.open({
                 title: 'Rollback to previous release',
@@ -447,15 +480,37 @@ include __DIR__ . '/../src/components/navbar.php';
                 logPath: (jobId, offset) => `updates/jobs/${jobId}/log?offset=${offset}`,
                 onDone: (job) => {
                     this.jobRunning = false;
-                    if (job.status === 'succeeded') this.reloadAfterRestart();
+                    if (job.status === 'succeeded') this.reloadAfterRestart(job.result?.version, 'rollback');
                 },
                 onError: () => { this.jobRunning = false; },
             });
         },
 
-        reloadAfterRestart() {
-            toast.success('Done. Reloading in a few seconds...');
-            setTimeout(() => location.reload(), 4000);
+        // The apply/rollback job already succeeded by the time this runs, but the API
+        // process (and PHP-FPM) are mid-restart -- an immediate reload would hit a Bad
+        // Gateway while they come back up. A failed page navigation isn't something JS can
+        // retry (the browser just shows its own error page), so instead poll a cheap API
+        // call until it responds, then reload exactly once.
+        async reloadAfterRestart(version, action) {
+            const label = action === 'rollback' ? 'rolled back' : 'updated';
+            toast.success('Restarting the service...');
+
+            const maxAttempts = 10;
+            const delayMs = 2000;
+            for (let i = 0; i < maxAttempts; i++) {
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
+                try {
+                    await api('info');
+                    toast.success(version ? `Successfully ${label} to v${version}.` : `Successfully ${label}.`);
+                    setTimeout(() => location.reload(), 1500);
+                    return;
+                } catch (e) {
+                    // Still restarting -- keep polling.
+                }
+            }
+            // Gave up waiting -- reload anyway so the user sees the actual error state
+            // instead of nothing happening.
+            location.reload();
         },
 
         async checkAgentUpdate() {
@@ -520,6 +575,7 @@ include __DIR__ . '/../src/components/navbar.php';
 
         rollbackAgent() {
             if (this.agentJobRunning) return;
+            if (!confirm(`Roll back the agent from v${this.agentVersion} to its previous release?`)) return;
             this.agentJobRunning = true;
             JobModal.open({
                 title: 'Rollback agent to previous release',

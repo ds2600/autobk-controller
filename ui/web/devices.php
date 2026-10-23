@@ -270,7 +270,64 @@ include __DIR__ . '/../src/components/navbar.php';
 
       </div>
     </div>
-  </div><!--Loading div end-->  
+
+    <!-- Schedule Now Modal -->
+    <div
+      x-show="showScheduleModal"
+      x-transition.opacity
+      style="display:none"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+    >
+      <div class="bg-white rounded-2xl shadow w-full max-w-md p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">Schedule a Backup Now</h3>
+          <button
+            type="button"
+            class="text-sm text-gray-500 hover:text-gray-800"
+            @click="closeScheduleModal()"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="text-sm text-gray-700 space-y-3">
+          <p>
+            This adds a one-time backup request for
+            <strong x-text="scheduleTarget?.sName"></strong> — it doesn't run instantly.
+          </p>
+          <p x-show="backupHz > 0">
+            AutoBk checks for new requests every
+            <strong x-text="scheduleIntervalLabel()"></strong>. Once it sees this one, it runs the backup and clears the request.
+          </p>
+          <p x-show="!(backupHz > 0)">
+            AutoBk checks for new requests on its regular cycle. Once it sees this one, it runs the backup and clears the request.
+          </p>
+          <p>This doesn't change this device's regular recurring schedule.</p>
+        </div>
+
+        <div class="flex justify-end items-center gap-3 mt-5">
+          <button
+            type="button"
+            class="text-sm text-gray-600 hover:text-gray-900"
+            @click="closeScheduleModal()"
+            :disabled="schedulingNowId === scheduleTarget?.kSelf"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black disabled:opacity-60 disabled:cursor-not-allowed"
+            @click="confirmScheduleNow()"
+            :disabled="schedulingNowId === scheduleTarget?.kSelf"
+          >
+            <span x-show="schedulingNowId !== scheduleTarget?.kSelf">Schedule Backup</span>
+            <span x-show="schedulingNowId === scheduleTarget?.kSelf">Scheduling…</span>
+          </button>
+        </div>
+        <p class="text-sm text-red-600 mt-2" x-text="scheduleError"></p>
+      </div>
+    </div>
+  </div><!--Loading div end-->
   </main>
 
     <script>
@@ -332,6 +389,29 @@ include __DIR__ . '/../src/components/navbar.php';
                 iAutoWeeks: 1
             },
             schedulingNowId: null,
+            showScheduleModal: false,
+            scheduleTarget: null,
+            scheduleError: '',
+            backupHz: null,
+
+            async fetchBackupInterval() {
+                try {
+                    const r = await api('info');
+                    const hz = Number(r?.data?.backupHz);
+                    this.backupHz = hz > 0 ? hz : null;
+                } catch (e) {
+                    this.backupHz = null;
+                }
+            },
+
+            scheduleIntervalLabel() {
+                if (!this.backupHz || this.backupHz <= 0) return '';
+                const minutes = Math.round(this.backupHz / 60);
+                if (minutes < 1) {
+                    return `${this.backupHz} second${this.backupHz === 1 ? '' : 's'}`;
+                }
+                return `${minutes} minute${minutes === 1 ? '' : 's'}`;
+            },
 
             debouncedSearch() {
                 clearTimeout(this.searchTimeout);
@@ -431,9 +511,10 @@ include __DIR__ . '/../src/components/navbar.php';
               }
             },
 
-            async init(){ 
+            async init(){
                 await this.loadDeviceTypes();
-                await this.load(); 
+                await this.load();
+                this.fetchBackupInterval();
             },
 
             async loadDeviceTypes() {
@@ -608,15 +689,12 @@ include __DIR__ . '/../src/components/navbar.php';
                     if (row) self.openEdit(row);
                 });
 
-                table.on('click', '.js-sched', async function() {
+                table.on('click', '.js-sched', function() {
                     const k = Number(jQuery(this).data('kself'));
                     const row = self.rows.find(r => Number(r.kSelf) === k);
                     if (!row) return;
 
-                    jQuery(this).prop('disabled', true).text('Scheduling…');
-
-                    await self.scheduleNow(row);
-
+                    self.openScheduleConfirm(row);
                 });
             },
 
@@ -625,11 +703,30 @@ include __DIR__ . '/../src/components/navbar.php';
               window.location = `/backups.php?download=${latest.kSelf}`;
             },
 
+            openScheduleConfirm(d) {
+                if (!d?.kSelf || d.sType === 'OneNetLog') return;
+                this.scheduleTarget = d;
+                this.scheduleError = '';
+                this.showScheduleModal = true;
+            },
+
+            closeScheduleModal() {
+                this.showScheduleModal = false;
+                this.scheduleTarget = null;
+                this.scheduleError = '';
+            },
+
+            async confirmScheduleNow() {
+                if (!this.scheduleTarget) return;
+                await this.scheduleNow(this.scheduleTarget);
+            },
+
             async scheduleNow(d){
                 if(!d?.kSelf) return;
                 if (d.sType === 'OneNetLog') return;
                 this.schedulingNowId = d.kSelf;
                 this.error = '';
+                this.scheduleError = '';
 
                 try {
                     await api(`schedules`, {
@@ -637,15 +734,18 @@ include __DIR__ . '/../src/components/navbar.php';
                         body: JSON.stringify({
                             kDevice: d.kSelf,
                             tTime: new Date().toISOString(),
-                            sState: 'Manual' 
+                            sState: 'Manual'
                         })
                     });
                     toast.success(`Backup scheduled for device ${d.sName}`);
+                    this.showScheduleModal = false;
+                    this.scheduleTarget = null;
 
                     // refresh DT
                     await this.load();
                 } catch (e) {
                     this.error = e.message || `Failed to schedule backup for device ${d.sName}`;
+                    this.scheduleError = e.message || `Failed to schedule backup for device ${d.sName}`;
                     toast.error(`Failed to schedule backup for device ${d.sName}: ${e.message}`);
                 } finally {
                     this.schedulingNowId = null;

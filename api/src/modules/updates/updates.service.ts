@@ -306,6 +306,12 @@ function runRollback(job: UpdateJob, previousRelease: string, reqMeta: AuditMeta
             }
             appendLine(job, `Rolling back to ${previousRelease}`);
 
+            // The release being abandoned by this rollback -- captured before repointing so we
+            // can remove its directory once the swap succeeds. Otherwise it's left behind on
+            // disk forever, and a later re-apply of that same version fails runApply's
+            // "release directory already exists" guard.
+            const abandonedRelease = fs.existsSync(CURRENT_SYMLINK) ? fs.readlinkSync(CURRENT_SYMLINK) : null;
+
             const tmpLink = `${CURRENT_SYMLINK}.tmp`;
             if (fs.existsSync(tmpLink)) fs.unlinkSync(tmpLink);
             fs.symlinkSync(previousRelease, tmpLink);
@@ -313,6 +319,25 @@ function runRollback(job: UpdateJob, previousRelease: string, reqMeta: AuditMeta
             appendLine(job, `Repointed current -> ${previousRelease}`);
 
             await restartPhpFpm(job);
+
+            if (abandonedRelease && abandonedRelease !== previousRelease) {
+                try {
+                    fs.rmSync(abandonedRelease, { recursive: true, force: true });
+                    appendLine(job, `Removed abandoned release directory ${abandonedRelease}`);
+                } catch (err: any) {
+                    appendLine(job, `WARNING: failed to remove ${abandonedRelease} (${err.message}) -- remove it manually before re-applying that version`);
+                }
+            }
+
+            // This rollback consumed the one previous-release record this feature keeps --
+            // clear it so a second rollback click doesn't try to roll the now-current release
+            // back onto itself. (Only one level of rollback is supported; see startApply.)
+            try {
+                await prisma.appSetting.update({
+                    where: { key: PREVIOUS_RELEASE_SETTING_KEY },
+                    data: { value: null, updatedBy: reqMeta.actorUserId },
+                });
+            } catch { /* non-fatal: at worst a future rollback attempt 404s cleanly */ }
 
             // No migration step here: this project's schema changes are additive-only, so
             // older code running against a newer schema is expected to be safe without a
@@ -330,11 +355,17 @@ function runRollback(job: UpdateJob, previousRelease: string, reqMeta: AuditMeta
 
 export const updatesService = {
     async checkForUpdate() {
+        // Surfaced so the UI can name an exact rollback target instead of just "the
+        // previous release" -- same row runRollback clears once it's consumed.
+        const previousReleaseSetting = await prisma.appSetting.findUnique({ where: { key: PREVIOUS_RELEASE_SETTING_KEY } });
+        const previousVersion = previousReleaseSetting?.value ? path.basename(previousReleaseSetting.value) : null;
+
         try {
             const release = await fetchLatestRelease();
             const latestVersion = String(release.tag_name || "").replace(/^v/, "");
             return {
                 currentVersion: VERSION,
+                previousVersion,
                 latestVersion,
                 isUpToDate: compareSemver(VERSION, latestVersion) >= 0,
                 releaseUrl: release.html_url || null,
@@ -344,6 +375,7 @@ export const updatesService = {
         } catch {
             return {
                 currentVersion: VERSION,
+                previousVersion,
                 latestVersion: null,
                 isUpToDate: true,
                 releaseUrl: null,

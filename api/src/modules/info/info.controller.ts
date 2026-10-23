@@ -6,7 +6,7 @@ import { Request, Response } from "express";
 import os from "os";
 import path from "path";
 import disk from "diskusage";
-import { VERSION, API_VERSION } from "../../config/constants";
+import { VERSION, API_VERSION, BACKUP_HZ } from "../../config/constants";
 import { buildSuccess } from "../../utils/envelope";
 import { prisma } from "../../db/prisma";
 import { env } from "../../config/env";
@@ -36,6 +36,7 @@ export const infoController = {
         const info = {
             appVersion: VERSION,
             apiVersion: API_VERSION,
+            backupHz: BACKUP_HZ,
             nodeVersion: process.version,
             dbVersion: dbVersion,
             appUptime : process.uptime(),
