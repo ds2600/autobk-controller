@@ -170,7 +170,7 @@ export const reportsService = {
                             collapsible: true,
                             uncollapsibleWidgetsCount: Math.min(2, report.failures.length),
                             widgets: report.failures.length === 0
-                                ? [{ textParagraph: { text: "<i>No failures recorded — great job!</i>" } }]
+                                ? [{ textParagraph: { text: "<i>No failures recorded.</i>" } }]
                                 : report.failures.map(f => ({
                                     textParagraph: {
                                         text:

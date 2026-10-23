@@ -27,24 +27,10 @@ include __DIR__ . '/../src/components/navbar.php';
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <span 
+          <span
             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
             x-text="appVersion ? `${appVersion}` : 'Version: —'"
           ></span>
-
-              <template x-if="latestVersion">
-                <a
-                    :href="latestUrl"
-                    target="_blank"
-                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
-                    :class="{
-                      'bg-green-50 text-green-700 border border-green-200': isUpToDate,
-                      'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100': !isUpToDate
-                    }"
-                    x-text="isUpToDate ? 'Up-to-date' : `Update → v${latestVersion}`"
-                >          
-                </a>
-            </template>
         </div>
       </div>
 
@@ -236,7 +222,7 @@ include __DIR__ . '/../src/components/navbar.php';
             </div>
 
             <p x-show="checkFailed" x-cloak class="text-xs text-amber-600 mb-2">
-              Couldn't reach GitHub to check for updates — see the API log for details.
+              Couldn't reach GitHub to check for updates.
             </p>
 
             <input type="file" accept=".tar.gz" x-ref="bundleFile" @change="onBundleSelected($event)" class="text-sm">
@@ -282,42 +268,33 @@ include __DIR__ . '/../src/components/navbar.php';
                   ></a>
                 </template>
               </div>
-              <button type="button" @click="rollbackAgent()" :disabled="agentJobRunning" title="Roll back the agent to its previous release"
+              <button type="button" @click="rollbackAgent()" :disabled="agentJobRunning || agentCheckFailed" title="Roll back to the previous release"
                 class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
                 Rollback
               </button>
             </div>
 
             <p x-show="agentCheckFailed" x-cloak class="text-xs text-amber-600 mb-2">
-              Couldn't reach the agent or GitHub to check for updates — see the API log for details.
+              Couldn't reach the agent or GitHub to check for updates.
             </p>
 
-            <div class="flex items-center gap-2">
-              <button type="button" @click="downloadAgentUpdate()"
-                :disabled="agentJobRunning || agentIsUpToDate || !agentLatestVersion"
-                class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
-                Download <span x-text="agentLatestVersion ? `v${agentLatestVersion}` : ''"></span>
-              </button>
-
-              <template x-if="agentManifest">
-                <button type="button" @click="applyAgentUpdate()" :disabled="agentJobRunning"
-                  class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-                  Apply <span x-text="`v${agentManifest?.version}`"></span>
-                </button>
-              </template>
-            </div>
+            <button type="button" @click="downloadAgentUpdate()"
+              :disabled="agentJobRunning || agentIsUpToDate || !agentLatestVersion"
+              class="text-sm px-3 py-1.5 rounded-lg border text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+              Download <span x-text="agentLatestVersion ? `v${agentLatestVersion}` : ''"></span>
+            </button>
 
             <div x-show="agentManifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
               <p>Staged: <span class="font-medium" x-text="`v${agentManifest?.version}`"></span>
                  &middot; built <span x-text="agentManifest?.builtAt"></span>
                  &middot; <span class="font-mono text-xs" x-text="agentManifest?.gitSha"></span></p>
+              <button type="button" @click="applyAgentUpdate()" :disabled="agentJobRunning"
+                class="mt-2 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                Apply Update
+              </button>
             </div>
 
             <p x-show="agentError" x-cloak class="mt-3 text-sm text-red-600" x-text="agentError"></p>
-
-            <p class="mt-3 text-xs text-slate-500">
-              Downloads and checksum-verifies the release directly on the agent's host — no upload needed.
-            </p>
           </div>
         </div>
       </div>

@@ -293,7 +293,7 @@ include __DIR__ . '/../src/components/navbar.php';
         <div class="text-sm text-gray-700 space-y-3">
           <p>
             This adds a one-time backup request for
-            <strong x-text="scheduleTarget?.sName"></strong> — it doesn't run instantly.
+            <strong x-text="scheduleTarget?.sName"></strong>. It does not run instantly.
           </p>
           <p x-show="backupHz > 0">
             AutoBk checks for new requests every

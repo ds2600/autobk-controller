@@ -44,7 +44,7 @@ include __DIR__ . '/../src/components/navbar.php';
                         <span class="font-medium" x-text="lookupResult.sName"></span>
                         <span x-text="'(' + lookupResult.sType + ', ' + lookupResult.sIP + ')'"></span>
                         <span x-show="lookupResult.deleted" class="ml-1 text-gray-500">
-                            — deleted <span x-text="fmtDate(lookupResult.deletedAt)"></span>
+                            Deleted <span x-text="fmtDate(lookupResult.deletedAt)"></span>
                         </span>
                     </div>
                 </template>
