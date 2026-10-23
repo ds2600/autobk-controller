@@ -80,10 +80,9 @@ Plain PHP under `ui/web/*.php`, each starting with `require __DIR__ . '/../src/b
 
 `VERSION` (API) and `ui/VERSION` (UI) are bumped together per the global semantic-versioning rule — check both are in sync when reviewing a version bump.
 
-Bumping the version does **not** by itself trigger a release — `.github/workflows/release.yml` only runs on an actual pushed tag (`push: tags: v*.*.*`). Whenever a version bump lands on `main` (whether done directly, or merged from a branch), always give the user the exact tag/push commands needed to trigger the release build, e.g.:
+Bumping the version does **not** by itself trigger a release — `.github/workflows/release.yml` only runs on an actual pushed tag (`push: tags: v*.*.*`). Whenever a version bump lands on `main` (whether done directly, or merged from a branch), use `/root/autobk/push-release.sh` to push `main` and the tag in one step rather than typing out the fetch/merge/push/tag sequence by hand — it fast-forwards `main` to the given commit, verifies the `VERSION` file actually matches the given version before pushing anything (aborts otherwise), then pushes `main` and tags+pushes `vX.Y.Z` (which is what triggers the release build):
 ```bash
-git checkout main && git pull
-git tag vX.Y.Z
-git push origin vX.Y.Z
+./push-release.sh <commit-hash> <version>
+# e.g. ./push-release.sh 8dfa3cb3... 0.5.0
 ```
-Don't assume the user will know to do this or remember the syntax — state it explicitly every time, right after the version bump is in place on `main`.
+It takes two positional args — the commit hash to fast-forward `main` to, and the version string (no `v` prefix) it should find in `VERSION`. Both differ per release, so whenever a version bump lands on `main`, always give the user the exact invocation with that commit's hash and version filled in — don't assume they'll remember the syntax or go look it up themselves. The user still gets prompted for their SSH key passphrase by `git push`, same as always.
