@@ -44,3 +44,10 @@ export const EAS_ONENET_SCRIPT = path.join(
     "usr_autobk_version_OneNet.py"
 );
 export const EAS_OUTPUT_DIR = agentConfig.EAS?.Directory || "";
+
+// Agent self-update CLI (api/src/modules/agentUpdates) -- same invocation pattern as the
+// EAS script above: lives alongside autobk.ini in the agent checkout, run with AGENT_PYTHON.
+export const AGENT_UPDATE_SCRIPT = path.join(
+    process.env.AGENT_DIR || ".",
+    "usr_autobk_update.py"
+);

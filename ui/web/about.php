@@ -233,6 +233,70 @@ include __DIR__ . '/../src/components/navbar.php';
           then upload it above.
         </p>
       </div>
+
+      <!-- AutoBk Agent -->
+      <div class="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-semibold text-slate-700">AutoBk Agent</h3>
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+              x-text="agentVersion ? `v${agentVersion}` : 'Version: —'"
+            ></span>
+            <template x-if="agentLatestVersion">
+              <a
+                :href="agentLatestUrl || 'https://github.com/ds2600/autobk-agent/releases'"
+                target="_blank"
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors"
+                :class="{
+                  'bg-green-50 text-green-700 border border-green-200': agentIsUpToDate,
+                  'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100': !agentIsUpToDate
+                }"
+                x-text="agentIsUpToDate ? 'Up-to-date' : `Update → v${agentLatestVersion}`"
+              ></a>
+            </template>
+          </div>
+          <button type="button" @click="rollbackAgent()" :disabled="agentJobRunning" title="Roll back the agent to its previous release"
+            class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+            Rollback
+          </button>
+        </div>
+
+        <p x-show="agentCheckFailed" x-cloak class="text-xs text-amber-600 mb-2">
+          Couldn't reach the agent or GitHub to check for updates — see the API log for details.
+        </p>
+
+        <div class="flex items-center gap-2">
+          <button type="button" @click="downloadAgentUpdate()"
+            :disabled="agentJobRunning || agentIsUpToDate || !agentLatestVersion"
+            class="px-3 py-1.5 rounded-lg border text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50">
+            Download <span x-text="agentLatestVersion ? `v${agentLatestVersion}` : ''"></span>
+          </button>
+
+          <template x-if="agentManifest">
+            <button type="button" @click="applyAgentUpdate()" :disabled="agentJobRunning"
+              class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+              Apply <span x-text="`v${agentManifest?.version}`"></span>
+            </button>
+          </template>
+        </div>
+
+        <div x-show="agentManifest" x-cloak class="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
+          <p>Staged: <span class="font-medium" x-text="`v${agentManifest?.version}`"></span>
+             &middot; built <span x-text="agentManifest?.builtAt"></span>
+             &middot; <span class="font-mono text-xs" x-text="agentManifest?.gitSha"></span></p>
+        </div>
+
+        <p x-show="agentError" x-cloak class="mt-3 text-sm text-red-600" x-text="agentError"></p>
+
+        <p class="mt-3 text-xs text-slate-500">
+          Checked against the agent's own
+          <a href="https://github.com/ds2600/autobk-agent/releases" target="_blank" class="text-blue-600 underline">release page</a>.
+          Download fetches and checksum-verifies the release directly on the agent's host — no manual upload needed.
+          Only works once the agent has adopted the <code>releases/current</code> layout (see autobk-agent's <code>UPGRADE.md</code>).
+        </p>
+      </div>
+      <!-- End AutoBk Agent -->
 <?php endif; ?>
     </section>
     <section class="mt-6 text-center">
@@ -268,9 +332,20 @@ include __DIR__ . '/../src/components/navbar.php';
         jobRunning: false,
         uploadError: '',
 
+        agentVersion: '',
+        agentLatestVersion: null,
+        agentLatestUrl: '',
+        agentIsUpToDate: true,
+        agentCheckFailed: false,
+        agentManifest: null,
+        agentStagingId: null,
+        agentJobRunning: false,
+        agentError: '',
+
         async init() {
           await this.load();
           this.checkForUpdate();
+          this.checkAgentUpdate();
         },
 
         async load() {
@@ -381,6 +456,87 @@ include __DIR__ . '/../src/components/navbar.php';
         reloadAfterRestart() {
             toast.success('Done. Reloading in a few seconds...');
             setTimeout(() => location.reload(), 4000);
+        },
+
+        async checkAgentUpdate() {
+            try {
+                const r = await api('agent-updates/check');
+                const d = r.data || {};
+                this.agentVersion = d.currentVersion;
+                this.agentLatestVersion = d.latestVersion;
+                this.agentLatestUrl = d.releaseUrl;
+                this.agentIsUpToDate = d.isUpToDate;
+                this.agentCheckFailed = !!d.checkFailed;
+            } catch (e) {
+                console.warn('Agent release check failed.', e);
+                this.agentCheckFailed = true;
+            }
+        },
+
+        downloadAgentUpdate() {
+            if (!this.agentLatestVersion || this.agentJobRunning) return;
+            this.agentJobRunning = true;
+            this.agentError = '';
+            JobModal.open({
+                title: `Download agent v${this.agentLatestVersion}`,
+                startPath: 'agent-updates/download',
+                startOpts: { method: 'POST', body: JSON.stringify({ version: this.agentLatestVersion }) },
+                logPath: (jobId, offset) => `agent-updates/jobs/${jobId}/log?offset=${offset}`,
+                onDone: (job) => {
+                    this.agentJobRunning = false;
+                    if (job.status === 'succeeded') {
+                        this.agentStagingId = job.result?.stagingId;
+                        this.agentManifest = job.result?.manifest;
+                    } else {
+                        this.agentError = job.error || 'Download failed.';
+                    }
+                },
+                onError: (e) => { this.agentJobRunning = false; this.agentError = e.message || 'Download failed.'; },
+            });
+        },
+
+        applyAgentUpdate() {
+            if (!this.agentStagingId || this.agentJobRunning) return;
+            this.agentJobRunning = true;
+            JobModal.open({
+                title: `Apply agent v${this.agentManifest?.version}`,
+                startPath: 'agent-updates/apply',
+                startOpts: { method: 'POST', body: JSON.stringify({ stagingId: this.agentStagingId }) },
+                logPath: (jobId, offset) => `agent-updates/jobs/${jobId}/log?offset=${offset}`,
+                onDone: (job) => {
+                    this.agentJobRunning = false;
+                    if (job.status === 'succeeded') {
+                        this.agentManifest = null;
+                        this.agentStagingId = null;
+                        toast.success('Agent updated.');
+                        this.checkAgentUpdate();
+                    } else {
+                        this.agentError = job.error || 'Apply failed.';
+                    }
+                },
+                onError: (e) => { this.agentJobRunning = false; this.agentError = e.message || 'Apply failed.'; },
+            });
+        },
+
+        rollbackAgent() {
+            if (this.agentJobRunning) return;
+            this.agentJobRunning = true;
+            JobModal.open({
+                title: 'Rollback agent to previous release',
+                startPath: 'agent-updates/rollback',
+                startOpts: { method: 'POST' },
+                logPath: (jobId, offset) => `agent-updates/jobs/${jobId}/log?offset=${offset}`,
+                onDone: (job) => {
+                    this.agentJobRunning = false;
+                    if (job.status === 'succeeded') {
+                        toast.success('Agent rolled back.');
+                        this.checkAgentUpdate();
+                    } else {
+                        this.agentError = job.error || 'Rollback failed.';
+                    }
+                },
+                onError: (e) => { this.agentJobRunning = false; this.agentError = e.message || 'Rollback failed.'; },
+            });
         },
 
         usedMemory() {
